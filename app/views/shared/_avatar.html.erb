@@ -1,0 +1,17 @@
+<%# Avatars are served at their uploaded size and constrained by CSS. Generating
+    variants would pull libvips into every developer's machine for a 40px thumbnail;
+    uploads are capped at 2 MB instead. See README for when that trade flips. %>
+<% size = local_assigns.fetch(:size, "size-10") %>
+
+<%# The attachment has to be saved, not merely assigned: re-rendering the form after a
+    failed create would otherwise ask for a URL to a blob that has no id yet. %>
+<% if user.avatar_image.attachment&.persisted? %>
+  <%= image_tag user.avatar_image,
+        alt: user.full_name,
+        loading: "lazy",
+        class: "#{size} rounded-full object-cover ring-1 ring-slate-200" %>
+<% else %>
+  <span class="<%= size %> flex items-center justify-center rounded-full bg-brand-50
+               text-xs font-semibold text-brand-700 ring-1 ring-slate-200"
+        aria-hidden="true"><%= user.initials %></span>
+<% end %>
