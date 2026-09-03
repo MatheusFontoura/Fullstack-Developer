@@ -8,6 +8,7 @@
       <% if Current.user.admin? %>
         <%= link_to "Dashboard", admin_dashboard_path, class: "text-sm font-medium text-slate-600 hover:text-slate-900" %>
         <%= link_to "Users", admin_users_path, class: "text-sm font-medium text-slate-600 hover:text-slate-900" %>
+        <%= link_to "Imports", admin_spreadsheet_imports_path, class: "text-sm font-medium text-slate-600 hover:text-slate-900" %>
       <% end %>
 
       <%= link_to "Profile", profile_path, class: "text-sm font-medium text-slate-600 hover:text-slate-900" %>

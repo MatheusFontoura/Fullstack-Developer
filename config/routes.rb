@@ -8,6 +8,8 @@ Rails.application.routes.draw do
   namespace :admin do
     resource :dashboard, only: :show
 
+    resources :spreadsheet_imports, only: %i[ index new create show ]
+
     resources :users, except: :show do
       # The role is a sub-resource rather than a custom action on the user, so that
       # UsersController stays plain CRUD and the "an admin cannot demote themselves"
