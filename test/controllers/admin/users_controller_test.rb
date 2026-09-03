@@ -1,0 +1,146 @@
+require "test_helper"
+
+class Admin::UsersControllerTest < ActionDispatch::IntegrationTest
+  setup { sign_in_as users(:admin) }
+
+  test "lists users" do
+    get admin_users_path
+
+    assert_response :success
+    assert_select "td", text: /Ada Lovelace/
+  end
+
+  test "filters by name" do
+    get admin_users_path(query: "Ada")
+
+    assert_select "td", text: /Ada Lovelace/
+    assert_select "td", text: /Grace Hopper/, count: 0
+  end
+
+  test "filters by role" do
+    get admin_users_path(role: "admin")
+
+    assert_select "td", text: /Grace Hopper/
+    assert_select "td", text: /Ada Lovelace/, count: 0
+  end
+
+  test "ignores a role filter that is not one of the enum values" do
+    get admin_users_path(role: "'; DROP TABLE users; --")
+
+    assert_response :success
+    assert_select "td", text: /Ada Lovelace/
+  end
+
+  test "creates a user with a role of the admin's choosing" do
+    assert_difference -> { User.count }, 1 do
+      post admin_users_path, params: { user: valid_attributes.merge(role: "admin") }
+    end
+
+    assert_redirected_to admin_users_path
+    assert_predicate User.find_by(email: "katherine@umanni.test"), :admin?
+  end
+
+  test "re-renders the form when creation is invalid" do
+    assert_no_difference -> { User.count } do
+      post admin_users_path, params: { user: valid_attributes.merge(email: "nope") }
+    end
+
+    assert_response :unprocessable_content
+  end
+
+  test "attaches an avatar" do
+    post admin_users_path, params: { user: valid_attributes.merge(avatar_image: avatar_upload) }
+
+    assert_predicate User.find_by(email: "katherine@umanni.test").avatar_image, :attached?
+  end
+
+  test "rejects an avatar that is not a supported image" do
+    assert_no_difference -> { User.count } do
+      post admin_users_path, params: {
+        user: valid_attributes.merge(
+          avatar_image: fixture_file_upload("not-an-image.txt", "text/plain")
+        )
+      }
+    end
+
+    assert_response :unprocessable_content
+  end
+
+  test "updates a user" do
+    patch admin_user_path(users(:member)), params: { user: { full_name: "Ada King" } }
+
+    assert_redirected_to admin_users_path
+    assert_equal "Ada King", users(:member).reload.full_name
+  end
+
+  test "keeps the existing password when the password fields are left blank" do
+    member = users(:member)
+    digest = member.password_digest
+
+    patch admin_user_path(member), params: {
+      user: { full_name: "Ada King", password: "", password_confirmation: "" }
+    }
+
+    assert_equal digest, member.reload.password_digest
+  end
+
+  test "reports an error rather than silently keeping the name when it is cleared" do
+    patch admin_user_path(users(:member)), params: { user: { full_name: "" } }
+
+    assert_response :unprocessable_content
+    assert_equal "Ada Lovelace", users(:member).reload.full_name
+  end
+
+  test "deletes a user" do
+    assert_difference -> { User.count }, -1 do
+      delete admin_user_path(users(:member))
+    end
+
+    assert_redirected_to admin_users_path
+  end
+
+  test "refuses to delete the signed in admin" do
+    assert_no_difference -> { User.count } do
+      delete admin_user_path(users(:admin))
+    end
+
+    assert_equal "Delete your own account from your profile.", flash[:alert]
+  end
+
+  test "rejects a submission that is not nested under a user key" do
+    post admin_users_path, params: valid_attributes
+
+    assert_response :bad_request
+  end
+
+  test "is closed to users who are not admins" do
+    sign_out
+    sign_in_as users(:member)
+
+    get admin_users_path
+
+    assert_redirected_to profile_url
+  end
+
+  test "is closed to visitors" do
+    sign_out
+
+    get admin_users_path
+
+    assert_redirected_to new_session_path
+  end
+
+  private
+    def valid_attributes
+      {
+        full_name: "Katherine Johnson",
+        email: "katherine@umanni.test",
+        password: "secret-password",
+        password_confirmation: "secret-password"
+      }
+    end
+
+    def avatar_upload
+      fixture_file_upload("avatar.png", "image/png")
+    end
+end
