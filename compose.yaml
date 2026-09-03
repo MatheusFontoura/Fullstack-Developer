@@ -1,0 +1,39 @@
+# One command to a running application: `docker compose up`.
+#
+# There is no database service — SQLite lives in the storage/ volume, and Solid Queue,
+# Solid Cache and Solid Cable sit on their own SQLite files beside it. That is the point
+# of the Rails 8 stack this test asks for: no Redis, no Postgres, no sidecar.
+#
+# The host port is 3200 rather than 3000 so this does not collide with a Rails server
+# already running on the machine. Override with `WEB_PORT=4000 docker compose up`.
+services:
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    command: bash -c "bin/rails db:prepare && bin/dev"
+    ports:
+      - "${WEB_PORT:-3200}:3000"
+    volumes:
+      - .:/rails
+      - bundle:/usr/local/bundle
+      - storage:/rails/storage
+      # tmp/ and log/ stay inside the container. Written through the bind mount they
+      # land on the host owned by root, which then blocks a local `bin/dev` from
+      # writing its own bootsnap cache. Use `docker compose logs` to read them.
+      - tmp:/rails/tmp
+      - log:/rails/log
+    environment:
+      RAILS_ENV: development
+    healthcheck:
+      test: [ "CMD", "curl", "-fsS", "http://localhost:3000/up" ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 40s
+
+volumes:
+  bundle:
+  storage:
+  tmp:
+  log:
