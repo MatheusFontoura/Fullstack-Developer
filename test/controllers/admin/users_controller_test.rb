@@ -17,6 +17,14 @@ class Admin::UsersControllerTest < ActionDispatch::IntegrationTest
     assert_select "td", text: /Grace Hopper/, count: 0
   end
 
+  # Deterministic encryption rules out a partial match on email but not an exact one.
+  test "finds a user by their exact email despite the column being encrypted" do
+    get admin_users_path(query: users(:member).email.upcase)
+
+    assert_select "td", text: /Ada Lovelace/
+    assert_select "td", text: /Grace Hopper/, count: 0
+  end
+
   test "filters by role" do
     get admin_users_path(role: "admin")
 

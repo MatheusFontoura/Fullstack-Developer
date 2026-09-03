@@ -86,17 +86,65 @@ class SpreadsheetImportJobTest < ActiveJob::TestCase
     assert_equal 2, import.failed_rows
   end
 
-  test "marks the import failed and re-raises when the file cannot be read" do
+  test "marks the import failed, records why, and re-raises when the file cannot be read" do
     import = build_import("not-an-image.txt", skip_validation: true)
 
     assert_raises StandardError do
       SpreadsheetImportJob.perform_now(import)
     end
 
-    assert_predicate import.reload, :failed?
+    import.reload
+
+    assert_predicate import, :failed?
+    # A red badge with no reason sends the admin to a jobs table to find out what broke.
+    assert_predicate import.failure_reason, :present?
+  end
+
+  test "reads a capitalised role as the role it obviously is" do
+    path = Rails.root.join("tmp", "roles-#{SecureRandom.hex(4)}.csv")
+    path.write("full_name,email,role\nKatherine Johnson,katherine@umanni.test,Admin\n")
+    import = users(:admin).spreadsheet_imports.create!(file: { io: path.open, filename: "roles.csv" })
+
+    SpreadsheetImportJob.perform_now(import)
+
+    # Silently demoting "Admin" to a plain user, and counting the row as a success,
+    # is the kind of thing nobody notices until an admin cannot sign in.
+    assert_predicate User.find_by(email: "katherine@umanni.test"), :admin?
+    assert_equal 0, import.reload.failed_rows
+  ensure
+    path&.delete
+  end
+
+  # The bug this guards: User's dashboard refresh is debounced, and the debounce
+  # restarts on every write. A run creating rows faster than the delay produced no
+  # refresh at all until it finished — no live counter, in the one case that needed it.
+  test "refreshes the dashboard while a long import runs, not only at the end" do
+    import = build_import("bulk_users.csv")
+
+    refreshes = count_dashboard_refreshes { SpreadsheetImportJob.perform_now(import) }
+
+    assert_operator refreshes, :>, 1, "the dashboard was refreshed only once, at the end"
   end
 
   private
+    # Counted by hand rather than with a mocking library: Minitest 6 dropped
+    # minitest/mock, and turbo's own assertion helper needs the :test cable adapter,
+    # which this suite deliberately does not use — system tests need real delivery.
+    def count_dashboard_refreshes
+      count = 0
+      original = Turbo::StreamsChannel.method(:broadcast_refresh_to)
+
+      Turbo::StreamsChannel.define_singleton_method(:broadcast_refresh_to) do |*args, **options|
+        count += 1
+        original.call(*args, **options)
+      end
+
+      yield
+      count
+    ensure
+      Turbo::StreamsChannel.singleton_class.remove_method(:broadcast_refresh_to)
+    end
+
     def perform_resumed(import, completed:, current:)
       job = SpreadsheetImportJob.new(import)
       job.deserialize(job.serialize.merge("continuation" => { "completed" => completed, "current" => current }))
