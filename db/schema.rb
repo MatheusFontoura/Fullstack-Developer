@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_09_03_153213) do
+ActiveRecord::Schema[8.1].define(version: 2026_09_03_164525) do
   create_table "active_storage_attachments", force: :cascade do |t|
     t.bigint "blob_id", null: false
     t.datetime "created_at", null: false
@@ -51,6 +51,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_03_153213) do
   create_table "spreadsheet_imports", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.integer "failed_rows", default: 0, null: false
+    t.string "failure_reason"
     t.integer "processed_rows", default: 0, null: false
     t.json "row_errors", default: [], null: false
     t.string "status", default: "pending", null: false

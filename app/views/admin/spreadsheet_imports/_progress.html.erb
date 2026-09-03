@@ -44,6 +44,13 @@
     </div>
   </dl>
 
+  <% if spreadsheet_import.failure_reason.present? %>
+    <div class="mt-5 rounded-lg bg-red-50 px-4 py-3 ring-1 ring-inset ring-red-200">
+      <p class="text-sm font-medium text-red-800">The file could not be read</p>
+      <p class="mt-1 font-mono text-sm break-words text-red-700"><%= spreadsheet_import.failure_reason %></p>
+    </div>
+  <% end %>
+
   <% if spreadsheet_import.row_errors.any? %>
     <div class="mt-5 border-t border-slate-100 pt-5">
       <p class="text-sm font-medium text-slate-700">Rows that could not be imported</p>
