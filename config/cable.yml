@@ -1,0 +1,23 @@
+# Solid Cable in development as well as production, so the broadcast path that powers
+# the dashboard counters and the import progress bar is the same one that ships.
+development:
+  adapter: solid_cable
+  connects_to:
+    database:
+      writing: cable
+  polling_interval: 0.1.seconds
+  message_retention: 1.day
+
+# System tests drive a real browser against the same process, so they need a working
+# in-process pubsub. The :test adapter records broadcasts instead of delivering them,
+# which would make every live-update assertion fail for the wrong reason.
+test:
+  adapter: async
+
+production:
+  adapter: solid_cable
+  connects_to:
+    database:
+      writing: cable
+  polling_interval: 0.1.seconds
+  message_retention: 1.day

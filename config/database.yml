@@ -1,0 +1,63 @@
+# SQLite in WAL mode. Rails 8 applies these pragmas by default; they are spelled out
+# here because they are the difference between a toy SQLite setup and a production one,
+# and a reviewer should not have to read the adapter source to know what we run with.
+#
+#   journal_mode: wal        readers never block the writer
+#   synchronous: normal      fsync on checkpoint only — safe under WAL, much faster
+#   foreign_keys: true       SQLite enforces FK constraints only when asked to
+#   busy_timeout (timeout)   wait rather than raise SQLite3::BusyException under contention
+default: &default
+  adapter: sqlite3
+  max_connections: <%= ENV.fetch("RAILS_MAX_THREADS") { 5 } %>
+  timeout: 5000
+  pragmas:
+    journal_mode: wal
+    synchronous: normal
+    foreign_keys: true
+    mmap_size: 134217728
+    journal_size_limit: 67108864
+    cache_size: 2000
+
+# Development mirrors production's four-database topology on purpose: Solid Queue,
+# Solid Cache and Solid Cable are the point of this application, and running them on
+# async/memory adapters in development would mean the code path never gets exercised.
+development:
+  primary:
+    <<: *default
+    database: storage/development.sqlite3
+  cache:
+    <<: *default
+    database: storage/development_cache.sqlite3
+    migrations_paths: db/cache_migrate
+  queue:
+    <<: *default
+    database: storage/development_queue.sqlite3
+    migrations_paths: db/queue_migrate
+  cable:
+    <<: *default
+    database: storage/development_cable.sqlite3
+    migrations_paths: db/cable_migrate
+
+# The test suite runs jobs inline and cable in-process, so it needs the primary
+# database only. Keeping it single-database also keeps parallel workers cheap:
+# each worker forks its own storage/test.sqlite3-N.
+test:
+  <<: *default
+  database: storage/test.sqlite3
+
+production:
+  primary:
+    <<: *default
+    database: storage/production.sqlite3
+  cache:
+    <<: *default
+    database: storage/production_cache.sqlite3
+    migrations_paths: db/cache_migrate
+  queue:
+    <<: *default
+    database: storage/production_queue.sqlite3
+    migrations_paths: db/queue_migrate
+  cable:
+    <<: *default
+    database: storage/production_cable.sqlite3
+    migrations_paths: db/cable_migrate
