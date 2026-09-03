@@ -22,6 +22,11 @@ Rails.application.configure do
   config.consider_all_requests_local = true
   config.cache_store = :null_store
 
+  # The rate limiter captures its store when the controller class loads, so a
+  # :null_store would make every rate-limit rule silently inert and untestable.
+  # General caching stays disabled; only the limiter gets a real store.
+  config.action_controller.cache_store = :memory_store
+
   # Jobs run inline through perform_enqueued_jobs; see test/test_helper.rb.
   config.active_job.queue_adapter = :test
 

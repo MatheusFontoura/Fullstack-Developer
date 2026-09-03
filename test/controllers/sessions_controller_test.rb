@@ -28,6 +28,15 @@ class SessionsControllerTest < ActionDispatch::IntegrationTest
     assert_empty cookies[:session_id].to_s
   end
 
+  test "rate limits repeated sign in attempts from the same address" do
+    11.times do
+      post session_path, params: { session: { email: users(:member).email, password: "wrong" } }
+    end
+
+    assert_redirected_to new_session_path
+    assert_equal "Too many attempts. Try again later.", flash[:alert]
+  end
+
   test "signs out" do
     sign_in_as users(:member)
 

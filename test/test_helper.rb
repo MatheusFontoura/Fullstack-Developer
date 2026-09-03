@@ -43,6 +43,9 @@ module ActiveSupport
 
     fixtures :all
 
+    # Rate-limit counters would otherwise survive from one test to the next.
+    setup { ActionController::Base.cache_store.clear }
+
     include ActiveJob::TestHelper
   end
 end
