@@ -1,4 +1,5 @@
-<%= form_with model: user, url: url, class: "space-y-5" do |form| %>
+<%= form_with model: user, url: url, class: "space-y-5",
+      data: { controller: "form", action: "submit->form#submitting" } do |form| %>
   <%= render "shared/form_errors", model: user %>
 
   <div>
@@ -44,7 +45,7 @@
   </div>
 
   <div class="flex items-center gap-3 pt-2">
-    <%= form.submit submit_label, class: "btn-primary" %>
+    <%= form.submit submit_label, class: "btn-primary", data: { form_target: "submit" } %>
     <%= link_to "Cancel", admin_users_path, class: "btn-secondary" %>
   </div>
 <% end %>

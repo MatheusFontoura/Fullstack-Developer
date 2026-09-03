@@ -9,7 +9,8 @@
   <div class="card mt-6 p-6 sm:p-8">
     <%= render "shared/form_errors", model: @spreadsheet_import %>
 
-    <%= form_with model: @spreadsheet_import, url: admin_spreadsheet_imports_path, class: "space-y-5" do |form| %>
+    <%= form_with model: @spreadsheet_import, url: admin_spreadsheet_imports_path, class: "space-y-5",
+          data: { controller: "form", action: "submit->form#submitting" } do |form| %>
       <div>
         <%= form.label :file, "Spreadsheet", class: "field-label" %>
         <%= form.file_field :file, required: true, accept: ".csv,.xlsx",
@@ -31,7 +32,8 @@
       </div>
 
       <div class="flex items-center gap-3">
-        <%= form.submit "Start import", class: "btn-primary" %>
+        <%= form.submit "Start import", class: "btn-primary",
+              data: { form_target: "submit", form_submitting_value: "Uploading…" } %>
         <%= link_to "Cancel", admin_spreadsheet_imports_path, class: "btn-secondary" %>
       </div>
     <% end %>
