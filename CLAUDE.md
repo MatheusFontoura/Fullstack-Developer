@@ -18,8 +18,11 @@
 - `email` uses `encrypts :email, deterministic: true`, so the unique index compares ciphertext and `authenticate_by`
   works, but `LIKE` on email is impossible. Dev/test keys live in `config/environments/{development,test}.rb` on
   purpose; production takes them from credentials (Rails default, nothing set in `production.rb`).
+- At least one admin must always exist. The rule is a model validation plus a `before_destroy`, because three routes
+  can break it (role toggle, admin edit form, profile deletion) and a rule enforced in one of them is not enforced.
 - `Admin::BaseController` runs `require_admin`; every admin controller inherits from it. Admin routes:
-  `admin/dashboard` (show, placeholder page), `admin/users` (all but show), `admin/users/:user_id/role` (update).
+  `admin/dashboard` (live counters), `admin/users` (all but show), `admin/users/:user_id/role` (update),
+  `admin/spreadsheet_imports` (index, new, create, show).
 - `Admin::Users::RolesController#update` toggles the role and answers with a Turbo Stream that replaces the row
   (`dom_id(user)`) and `#flash`. An admin cannot change their own role or delete themselves.
 - Landing page after sign-in and at `/`: admins go to `admin_dashboard_url`, everyone else to `profile_url`
@@ -29,7 +32,8 @@
 - `Pagination` (`app/models/pagination.rb`) is a PORO: offset-based, fetches `per_page + 1` rows, no COUNT.
 - `SpreadsheetImport` + `SpreadsheetImport::RowReader` + `SpreadsheetImportJob` (`ActiveJob::Continuable`) handle the
   .csv/.xlsx import. The job suppresses `User`'s debounced dashboard broadcast and paces refreshes itself.
-- `resource :profile` routes `show edit update destroy`; `ProfilesController` implements only `show`.
+- `resource :profile` routes `show edit update destroy`, all implemented. No id in the route, so `ProfilesController`
+  reads `Current.user` and never a parameter.
 - Tailwind component layer in `app/assets/tailwind/application.css`: `card`, `field-*`, `btn-*`, `badge-*`. Tailwind v4
   will not `@apply` one component class inside another, hence the selector lists.
 
@@ -55,8 +59,8 @@
 - Fixtures use `grace@umanni.test` (admin) and `ada@umanni.test` (user), same password.
 - No SMTP is configured for development, so password-reset mail fails silently (`raise_delivery_errors = false`).
   Preview at `/rails/mailers`.
-- `Dockerfile` is the production image: multi-stage, non-root, Thruster. `config/deploy.yml` is a Kamal stub with
-  placeholder hosts.
+- `Dockerfile` is the production image: multi-stage, non-root, Thruster. `config/deploy.yml` is a complete Kamal 2
+  configuration with three placeholders (registry, image owner, server/host).
 
 ## Testing
 
@@ -84,6 +88,10 @@
 - RuboCop: omakase plus a stricter layer (`.rubocop.yml`: metrics ceilings, Rails cops, Minitest and Performance
   plugins, line length 120). Run `bin/rubocop -A` after editing Ruby.
 - Error responses render with `status: :unprocessable_content`; destroy redirects use `status: :see_other`.
+- Submit-button state comes from Turbo's `data-turbo-submits-with`, not from Stimulus. The one Stimulus controller
+  (`image_preview`) does what Turbo cannot: reads a chosen `File` client-side and revokes the object URL on disconnect.
+- A Content Security Policy of `default-src 'none'` is enforced, with a per-response nonce for the import map. Adding
+  an external script or stylesheet means updating `config/initializers/content_security_policy.rb`.
 
 ## Gotchas
 

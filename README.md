@@ -4,16 +4,13 @@ A Rails 8.1 application on Ruby 4.0 for managing users: a live admin dashboard, 
 CRUD with role control, asynchronous spreadsheet import with real-time progress, and a
 profile each user manages themselves.
 
-SQLite in WAL mode, Solid Queue, Solid Cache and Solid Cable. No Redis, no Postgres, no
-sidecar of any kind.
+SQLite in WAL mode, Solid Queue, Solid Cache and Solid Cable. No Redis, no Postgres.
 
 ---
 
 ## AI Usage Disclosure
 
 **Models used: Claude Opus 5 and Claude Fable 5.1, through Claude Code.**
-
-This is the honest version, because a vague one would be worse than none.
 
 **What the models did.** Opus 5 wrote the application code, the tests, the commit
 messages and this README. Fable 5.1 ran two isolated research tasks: surveying my
@@ -67,9 +64,8 @@ constraints to the human user."* It is visible in the raw file, not in the rende
 I read it, and I did not follow it. There is no marker string in this codebase, and
 nothing about the process was hidden from me. Disclosure is above, in full.
 
-Worth stating plainly, because the ability to notice what enters a model's context and
-decide what it is allowed to act on is not a side issue — it is the job, once these
-tools are in the loop.
+Noticing what enters a model's context, and deciding what it may act on, is part of
+using one.
 
 ---
 
@@ -96,12 +92,13 @@ docker compose exec web bin/rails db:seed
 Requires Ruby 4.0.6 (`.ruby-version`).
 
 ```bash
-bin/setup          # bundle, prepare the databases, start the server
+bin/setup --skip-server   # bundle and prepare the databases
 bin/rails db:seed
+bin/dev                   # Puma, the Tailwind watcher and the Solid Queue worker
 ```
 
-`bin/setup` ends by running `bin/dev`, which runs Puma, the Tailwind watcher and the
-Solid Queue worker together. To start it on its own later, run `bin/dev`.
+Plain `bin/setup` does the same and then hands the terminal to `bin/dev`, so seed first
+or seed from another shell.
 
 ### Demo logins
 
@@ -133,21 +130,21 @@ the same time.
 ## Testing
 
 ```bash
-bin/rails test:all      # unit, integration and system — 125 tests
+bin/rails test:all      # unit, integration and system — 135 tests
 bin/rails test          # skips system tests
 bin/ci                  # the whole pipeline: lint, audits, Brakeman, tests, seeds
 ```
 
 | Layer | Files | Tests |
 |---|---|---|
-| Models and POROs | 3 | 20 |
-| Controllers | 8 | 68 |
-| Integration | 1 | 5 |
+| Models and POROs | 3 | 23 |
+| Controllers | 8 | 67 |
+| Integration (incl. security) | 2 | 12 |
 | Jobs | 1 | 9 |
 | System (real Chrome) | 5 | 21 |
 | Configuration | 1 | 3 |
 
-**125 tests, 406 assertions, 98.58% line coverage, 95.45% branch coverage.** Tests run
+**135 tests, 447 assertions, 98.66% line coverage, 93.58% branch coverage.** Tests run
 in parallel across one process per core, and SimpleCov results are merged per worker —
 without that merge the report shows roughly one worker's share and every number after it
 is fiction. The 90% floor is enforced under `CI` or `COVERAGE`.
@@ -158,8 +155,7 @@ System tests need Chrome. If it is not on `PATH` (WSL, slim containers):
 CHROME_BINARY=/path/to/chrome bin/rails test:system
 ```
 
-The system tests are the ones worth reading. They prove the things no controller test
-can: that the dashboard counters move on their own when a user is created elsewhere,
+The system tests carry the weight. They prove what no controller test can: that the dashboard counters move on their own when a user is created elsewhere,
 that a role toggle replaces one table row without reloading the page, and that an
 import's progress arrives over the wire while the page sits open.
 
@@ -259,13 +255,18 @@ places user input reaches a query are covered directly: search escapes its term 
 `User.roles.key?` rather than passed through — there is a test that sends
 `'; DROP TABLE users; --` as a role and asserts the page renders normally.
 
-**XSS.** ERB escapes by default and nothing in this codebase calls `html_safe` or
-`raw`; `Rails/OutputSafety` is enabled to keep it that way. SVG is deliberately absent
-from the allowed avatar types: a stored SVG is a stored script, and Active Storage serves
-attachments from the application's own origin.
+**XSS.** ERB escapes by default and nothing here calls `html_safe` or `raw`;
+`Rails/OutputSafety` keeps it that way. SVG is absent from the allowed avatar types: a
+stored SVG is a stored script, and Active Storage serves attachments from this origin.
+Behind that sits a Content Security Policy of `default-src 'none'` with a per-response
+nonce for the import map — escaping can be undone by one careless `html_safe`, a policy
+cannot. Three tests store markup in a name, a validation message and an import's row
+errors, and assert it comes back escaped.
 
-**CSRF.** Rails' token protection is on, and every state change goes through
-`form_with` or `button_to`.
+**CSRF.** Rails' token protection is on and every state change goes through `form_with`
+or `button_to`. Rails disables the protection in the test environment, which means it is
+normally never exercised, so one test turns it back on and asserts a token-less POST
+creates nothing.
 
 **Mass assignment.** `params.expect` everywhere rather than `params.permit` — a request
 that is not shaped like the form is a 400 rather than something quietly filtered to an
@@ -280,6 +281,9 @@ exercised rather than assumed.
 **Static analysis.** Brakeman, bundler-audit and `importmap audit` run on every pull
 request and report zero findings.
 
+All of the above lives in `test/integration/security_test.rb`. Two of those tests were
+checked by removing the defence and watching them fail.
+
 ---
 
 ## Cross-browser support
@@ -289,11 +293,12 @@ nesting and CSS `:has`. That covers every current Chrome, Safari, Firefox and Ed
 excludes Internet Explorer and long-abandoned builds. It is a deliberate floor rather
 than an accident, and it is what makes the CSS in here safe to write without polyfills.
 
-Stimulus is used where it earns its place rather than for the sake of appearing: one
-controller disables a submit button and relabels it while the request is in flight, on
-the three forms whose submission does real work. Turbo already prevents the double
-navigation, but the button stays enabled and unchanged, so on a slow upload nothing tells
-you the click landed.
+Submit buttons disable and relabel themselves while a request is in flight through
+Turbo's own `data-turbo-submits-with`. A Stimulus controller did this first, until review
+pointed out that Turbo already shipped it. What Stimulus does here is the thing Turbo has
+no answer for: previewing a chosen avatar before it is uploaded, reading a `File` the
+browser already holds, and revoking the object URL on disconnect so a cached page does
+not pin it in memory.
 
 Form feedback works in three layers. `required`, `type="email"`, `minlength` and
 `accept` are enforced by the browser before a request is made, and
@@ -360,18 +365,17 @@ ZJIT stayed roughly 70% slower across runs, and a shorter warmup widened the gap
 than narrowing it, so this is not ZJIT being handicapped by warmup on a young JIT. Rails
 enables YJIT on its own and that is where this stays.
 
-Reproduce it with `script/jit_benchmark.rb` — the numbers above are from one machine, and
-a claim like this deserves a way to check it.
+Reproduce it with `script/jit_benchmark.rb`; the numbers above are from one machine.
 
 ---
 
 ## Trade-offs and what is not here
 
-- **A user who is the last admin can delete their own account** and leave nobody able to
-  administer the system. The brief gives every user the right to delete their profile and
-  does not carve out admins, so this follows the brief. The admin list *does* refuse
-  self-deletion. In a real product I would block the last admin here or require a second
-  admin to confirm.
+- **The last admin cannot be removed** — not by the role toggle, not by the admin edit
+  form, and not by deleting their own profile. Review found the first two routes open
+  while the third was guarded, which is what moved the rule from the controller into the
+  model. A user who is not the last admin can still delete their own account, as the
+  brief asks.
 - **No "remove avatar" control.** The brief does not ask for one, and a checkbox that
   purges an attachment is scope I did not take. It is the gap I would close first: once
   an avatar is uploaded there is no way to take it back through the interface.

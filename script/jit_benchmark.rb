@@ -1,10 +1,14 @@
-# Measures a representative render-heavy request path under the interpreter, YJIT and
-# ZJIT, so the choice in the Dockerfile rests on numbers from this machine rather than
-# on a blog post.
+# Measures a render-heavy path under YJIT and ZJIT, so the choice rests on numbers from
+# this machine rather than on a blog post. Rails turns YJIT on by default, so there is no
+# plain-interpreter column to compare against without disabling that.
 #
-#   docker run --rm umanni:prod bin/rails runner script/jit_benchmark.rb
-#   docker run --rm -e RUBYOPT=--yjit umanni:prod bin/rails runner script/jit_benchmark.rb
-#   docker run --rm -e RUBYOPT=--zjit umanni:prod bin/rails runner script/jit_benchmark.rb
+# A fresh container has no database and this builds User objects, so prepare one in the
+# same command:
+#
+#   docker run --rm -e RUBYOPT=--yjit umanni:prod \
+#     sh -c "bin/rails db:prepare && bin/rails runner script/jit_benchmark.rb"
+#   docker run --rm -e RUBYOPT=--zjit umanni:prod \
+#     sh -c "bin/rails db:prepare && bin/rails runner script/jit_benchmark.rb"
 #
 # No benchmark gem: it stopped being a default gem in Ruby 4, and a monotonic clock
 # is all this needs.
