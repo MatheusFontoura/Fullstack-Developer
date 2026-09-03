@@ -31,9 +31,8 @@ class ProfilesController < ApplicationController
     # :role is absent, as it is everywhere outside the admin namespace. A user editing
     # their own profile cannot promote themselves.
     def profile_params
-      permitted = params.expect(user: [ :full_name, :email, :password, :password_confirmation, :avatar_image ])
-      permitted = permitted.except(:password, :password_confirmation) if permitted[:password].blank?
-      permitted = permitted.except(:avatar_image) if permitted[:avatar_image].blank?
-      permitted
+      without_untouched_fields params.expect(
+        user: [ :full_name, :email, :password, :password_confirmation, :avatar_image ]
+      )
     end
 end

@@ -18,4 +18,15 @@ class ApplicationController < ActionController::Base
     def home_url_for(user)
       user.admin? ? admin_dashboard_url : profile_url
     end
+
+    # An edit form submits empty password fields when the password is not being
+    # changed, and an empty file input when no new avatar was picked. Dropping those
+    # keys is what keeps "I did not touch this" from being read as "clear it", while
+    # still letting a genuinely cleared name fail validation instead of passing
+    # silently — which is why this is not a blanket compact_blank.
+    def without_untouched_fields(permitted)
+      permitted = permitted.except(:password, :password_confirmation) if permitted[:password].blank?
+      permitted = permitted.except(:avatar_image) if permitted[:avatar_image].blank?
+      permitted
+    end
 end

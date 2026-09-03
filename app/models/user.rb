@@ -22,8 +22,10 @@ class User < ApplicationRecord
   # A lambda, not the bare symbol: the macro calls `send` on the record for anything
   # that does not respond to `call`, so `:dashboard` would look for User#dashboard.
   #
-  # Refreshes are debounced by Turbo, which is what makes this safe during an import:
-  # five hundred created users collapse into a handful of broadcasts.
+  # Turbo debounces these, and the debounce restarts on every write. A bulk import
+  # writing faster than the delay therefore produces no broadcast at all until it
+  # stops — which is why SpreadsheetImportJob suppresses this and paces the dashboard
+  # itself rather than relying on the callback.
   broadcasts_refreshes_to ->(_user) { DASHBOARD_STREAM }
 
   normalizes :email, with: ->(email) { email.strip.downcase }
@@ -34,7 +36,16 @@ class User < ApplicationRecord
   validate :avatar_image_must_be_a_supported_image
 
   scope :ordered, -> { order(:full_name, :id) }
-  scope :search, ->(term) { where("full_name LIKE ?", "%#{sanitize_sql_like(term.to_s.strip)}%") }
+  # Deterministic encryption rules out a partial match on email but not an exact one,
+  # so an address is looked up whole and anything else searches the name.
+  scope :matching, ->(term) {
+    term = term.to_s.strip
+    if term.include?("@")
+      where(email: term.downcase)
+    else
+      where("full_name LIKE ?", "%#{sanitize_sql_like(term)}%")
+    end
+  }
   scope :with_role, ->(role) { where(role: role) }
 
   # Blank for an unsaved user, which is exactly the case on the "new user" form.

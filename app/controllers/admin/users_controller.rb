@@ -48,22 +48,15 @@ module Admin
       # Role is permitted here and nowhere else: an admin assigns roles, a visitor
       # registering themselves does not.
       def user_params
-        permitted = params.expect(
+        without_untouched_fields params.expect(
           user: [ :full_name, :email, :role, :password, :password_confirmation, :avatar_image ]
         )
-
-        # An edit form submits both fields empty when the admin is not changing the
-        # password, and an empty file input submits a blank avatar. Blanking those keys
-        # rather than compacting the whole hash keeps "the admin cleared the name" a
-        # validation error instead of a silent no-op.
-        permitted = permitted.except(:password, :password_confirmation) if permitted[:password].blank?
-        permitted = permitted.except(:avatar_image) if permitted[:avatar_image].blank?
-        permitted
       end
 
       def filtered_users
-        scope = User.all
-        scope = scope.search(params[:query]) if params[:query].present?
+        # Without the eager load this costs one attachment query per row rendered.
+        scope = User.with_attached_avatar_image
+        scope = scope.matching(params[:query]) if params[:query].present?
         # Checked against the enum rather than passed through, so a crafted role
         # parameter cannot reach the query.
         scope = scope.with_role(params[:role]) if User.roles.key?(params[:role])

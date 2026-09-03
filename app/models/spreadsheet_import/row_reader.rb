@@ -36,9 +36,11 @@ class SpreadsheetImport
       end
 
       def attributes_from(header, cells)
-        header.zip(cells.map { |cell| cell.to_s.strip.presence })
-              .to_h
-              .slice(*COLUMNS)
+        attributes = header.zip(cells.map { |cell| cell.to_s.strip.presence }).to_h.slice(*COLUMNS)
+        # "Admin" typed into Excel is the same role as "admin". Lowercasing here rather
+        # than in the job keeps every value the reader hands out already normalised.
+        attributes[:role] = attributes[:role]&.downcase
+        attributes
       end
   end
 end
