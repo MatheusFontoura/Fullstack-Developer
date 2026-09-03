@@ -4,7 +4,6 @@ class User < ApplicationRecord
   AVATAR_CONTENT_TYPES = %w[ image/png image/jpeg image/webp ].freeze
   AVATAR_MAX_SIZE = 2.megabytes
 
-  # Anyone watching the admin dashboard is subscribed to this stream.
   DASHBOARD_STREAM = "dashboard".freeze
 
   has_secure_password
@@ -34,6 +33,12 @@ class User < ApplicationRecord
   validates :email, presence: true, uniqueness: true, format: { with: URI::MailTo::EMAIL_REGEXP }
   validates :password, length: { minimum: 8 }, allow_nil: true
   validate :avatar_image_must_be_a_supported_image
+  # The system has to keep someone able to administer it. The rule lives here because
+  # there are three ways to break it — the role toggle, the admin edit form and a user
+  # deleting their own profile — and a rule enforced in one controller out of three is
+  # not enforced.
+  validate :last_admin_keeps_the_role, on: :update
+  before_destroy :last_admin_is_not_deletable
 
   scope :ordered, -> { order(:full_name, :id) }
   # Deterministic encryption rules out a partial match on email but not an exact one,
@@ -46,14 +51,33 @@ class User < ApplicationRecord
       where("full_name LIKE ?", "%#{sanitize_sql_like(term)}%")
     end
   }
-  scope :with_role, ->(role) { where(role: role) }
 
-  # Blank for an unsaved user, which is exactly the case on the "new user" form.
   def initials
     full_name.to_s.split.first(2).filter_map { |part| part[0] }.join.upcase
   end
 
   private
+    def another_admin_exists?
+      self.class.admin.where.not(id: id).exists?
+    end
+
+    def last_admin_keeps_the_role
+      return unless role_changed?(from: "admin")
+      return if another_admin_exists?
+
+      errors.add(:role, "cannot change: this is the only admin left")
+    end
+
+    def last_admin_is_not_deletable
+      # role_in_database, not role: an unsaved change to the attribute must not decide
+      # whether the row may go.
+      return unless role_in_database == "admin"
+      return if another_admin_exists?
+
+      errors.add(:base, "The only admin cannot be deleted.")
+      throw :abort
+    end
+
     def avatar_image_must_be_a_supported_image
       return unless avatar_image.attached?
 

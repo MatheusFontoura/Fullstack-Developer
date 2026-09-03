@@ -16,9 +16,12 @@ class ProfilesController < ApplicationController
   end
 
   def destroy
-    @user.destroy!
-    terminate_session
-    redirect_to new_session_path, notice: "Your account has been deleted.", status: :see_other
+    if @user.destroy
+      terminate_session
+      redirect_to new_session_path, notice: "Your account has been deleted.", status: :see_other
+    else
+      redirect_to profile_path, alert: @user.errors.full_messages.to_sentence, status: :see_other
+    end
   end
 
   private

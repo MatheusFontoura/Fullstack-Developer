@@ -59,7 +59,7 @@ module Admin
         scope = scope.matching(params[:query]) if params[:query].present?
         # Checked against the enum rather than passed through, so a crafted role
         # parameter cannot reach the query.
-        scope = scope.with_role(params[:role]) if User.roles.key?(params[:role])
+        scope = scope.where(role: params[:role]) if User.roles.key?(params[:role])
         scope
       end
   end
