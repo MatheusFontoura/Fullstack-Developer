@@ -4,6 +4,9 @@ class User < ApplicationRecord
   AVATAR_CONTENT_TYPES = %w[ image/png image/jpeg image/webp ].freeze
   AVATAR_MAX_SIZE = 2.megabytes
 
+  # Anyone watching the admin dashboard is subscribed to this stream.
+  DASHBOARD_STREAM = "dashboard".freeze
+
   has_secure_password
   has_many :sessions, dependent: :destroy
   has_one_attached :avatar_image
@@ -14,6 +17,13 @@ class User < ApplicationRecord
   encrypts :email, deterministic: true
 
   enum :role, { user: "user", admin: "admin" }, default: :user, validate: true
+
+  # A lambda, not the bare symbol: the macro calls `send` on the record for anything
+  # that does not respond to `call`, so `:dashboard` would look for User#dashboard.
+  #
+  # Refreshes are debounced by Turbo, which is what makes this safe during an import:
+  # five hundred created users collapse into a handful of broadcasts.
+  broadcasts_refreshes_to ->(_user) { DASHBOARD_STREAM }
 
   normalizes :email, with: ->(email) { email.strip.downcase }
 
