@@ -1,5 +1,15 @@
-# Idempotent: running it twice leaves the same database. Passwords are fixed on
-# purpose — these are demo credentials for a reviewer, documented in the README.
+# Demo data, and only ever demo data. The container entrypoint runs db:prepare, which
+# seeds a freshly created database — so without this guard a production deploy would
+# come up with a known email and a published password already in it.
+#
+# A real first admin belongs to the deploy, not to this file. The README shows the
+# one-liner for creating it.
+unless Rails.env.local?
+  puts "Skipping demo seeds outside development and test."
+  exit
+end
+
+# Idempotent: running it twice leaves the same database.
 DEMO_USER_COUNT = 32
 PASSWORD = "secret-password".freeze
 
