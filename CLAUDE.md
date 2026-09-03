@@ -27,6 +27,8 @@
 - Avatar is `has_one_attached :avatar_image` (Active Storage, Disk service). PNG/JPEG/WebP only, 2 MB cap, validated
   in the model. No variants; images are served at upload size and constrained by CSS.
 - `Pagination` (`app/models/pagination.rb`) is a PORO: offset-based, fetches `per_page + 1` rows, no COUNT.
+- `SpreadsheetImport` + `SpreadsheetImport::RowReader` + `SpreadsheetImportJob` (`ActiveJob::Continuable`) handle the
+  .csv/.xlsx import. The job suppresses `User`'s debounced dashboard broadcast and paces refreshes itself.
 - `resource :profile` routes `show edit update destroy`; `ProfilesController` implements only `show`.
 - Tailwind component layer in `app/assets/tailwind/application.css`: `card`, `field-*`, `btn-*`, `badge-*`. Tailwind v4
   will not `@apply` one component class inside another, hence the selector lists.
@@ -76,8 +78,9 @@
   the decision. Default branch is `master`.
 - `params.expect`, not `permit`, in every controller that takes a form.
 - `:role` is permitted only in `Admin::UsersController#user_params`. Self-registration never accepts it.
-- Admin search matches `full_name` only (`User.search`, escaped with `sanitize_sql_like`). Role filter is checked
-  against `User.roles` before it reaches the query.
+- Admin search is `User.matching`: an exact email when the term contains `@` (deterministic encryption allows it),
+  otherwise `full_name LIKE`, escaped with `sanitize_sql_like`. Role filter is checked against `User.roles` before it
+  reaches the query.
 - RuboCop: omakase plus a stricter layer (`.rubocop.yml`: metrics ceilings, Rails cops, Minitest and Performance
   plugins, line length 120). Run `bin/rubocop -A` after editing Ruby.
 - Error responses render with `status: :unprocessable_content`; destroy redirects use `status: :see_other`.
@@ -102,3 +105,8 @@
   without it runs everything, because avatars do not use variants.
 - `sign_in_as` in `test/test_helpers/session_test_helper.rb` writes a cookie into a test request and is for
   integration tests only; system tests use the browser-driven override in `ApplicationSystemTestCase`.
+- Turbo's debounce on `broadcasts_refreshes_to` restarts on every write, so a bulk job writing faster than the delay
+  broadcasts nothing until it stops. `SpreadsheetImportJob` wraps its loop in `User.suppressing_turbo_broadcasts` and
+  calls `Turbo::StreamsChannel.broadcast_refresh_to` on a fixed cadence instead.
+- The cable adapter in test is `async`, not `test`, because system tests need real delivery. That rules out
+  `assert_broadcasts` and turbo's own broadcast assertions; Minitest 6 also no longer ships `minitest/mock`.

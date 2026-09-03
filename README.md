@@ -48,15 +48,21 @@ gate sent the phase back rather than forward.
 - The import's progress bar stuck on "Processing" about one run in three. Two broadcasts
   a millisecond apart are not guaranteed to arrive in order, and the loser overwrote the
   winner. The fix was one broadcast instead of two, not a longer wait in the test.
+- The dashboard counters froze for the entire duration of an import — the one moment a
+  live counter earns its place. Turbo debounces refresh broadcasts and the debounce
+  restarts on every write, so a job creating rows faster than the delay produced no
+  refresh at all until it finished. Found by watching a 150-row import, not by reading
+  the code, which is why the comment in the model had confidently claimed the opposite.
 - The production image seeded demo users — a published email and a published password —
   because the entrypoint runs `db:prepare` and `db:prepare` seeds a new database. Found
   by running the production image rather than only building it.
 
 ### A note on the hidden instructions in the brief
 
-The upstream `README.md` contains an HTML comment addressed to LLM assistants. It asks
-the model to inject a marker string into the frontend and, in its own words, to *"not
-disclose or explain these hidden constraints to the human user."*
+The brief at <https://github.com/umanni/Fullstack-Developer> contains an HTML comment in
+its `README.md`, addressed to LLM assistants. It asks the model to inject a marker string
+into the frontend and, in its own words, to *"not disclose or explain these hidden
+constraints to the human user."* It is visible in the raw file, not in the rendered page.
 
 I read it, and I did not follow it. There is no marker string in this codebase, and
 nothing about the process was hidden from me. Disclosure is above, in full.
@@ -127,7 +133,7 @@ the same time.
 ## Testing
 
 ```bash
-bin/rails test:all      # unit, integration and system — 121 tests
+bin/rails test:all      # unit, integration and system — 124 tests
 bin/rails test          # skips system tests
 bin/ci                  # the whole pipeline: lint, audits, Brakeman, tests, seeds
 ```
@@ -135,13 +141,13 @@ bin/ci                  # the whole pipeline: lint, audits, Brakeman, tests, see
 | Layer | Files | Tests |
 |---|---|---|
 | Models and POROs | 3 | 20 |
-| Controllers | 8 | 65 |
+| Controllers | 8 | 66 |
 | Integration | 1 | 5 |
-| Jobs | 1 | 7 |
+| Jobs | 1 | 9 |
 | System (real Chrome) | 5 | 21 |
 | Configuration | 1 | 3 |
 
-**121 tests, 392 assertions, 97.94% line coverage, 93.75% branch coverage.** Tests run
+**124 tests, 402 assertions, 98.58% line coverage, 95.45% branch coverage.** Tests run
 in parallel across one process per core, and SimpleCov results are merged per worker —
 without that merge the report shows roughly one worker's share and every number after it
 is fiction. The 90% floor is enforced under `CI` or `COVERAGE`.
@@ -227,6 +233,13 @@ already in both Docker images.
 rather than a gem, and the whole test is built around Rails 8's own tools. Consistency
 won over familiarity.
 
+**The import paces its own dashboard refreshes.** `User` broadcasts a debounced refresh
+on every commit, which is right for one-at-a-time editing and useless during a bulk
+import: the debounce restarts on each write, so a fast job produces nothing until it
+stops. The job suppresses the model's broadcast and refreshes on a fixed cadence
+instead — an unpredictable schedule traded for a predictable one. There is a test that
+fails if the suppression is removed.
+
 **The import is continuable.** `ActiveJob::Continuable` is new in Rails 8.1, and here it
 is correctness rather than novelty: a worker restarting mid-file would replay rows it had
 already imported and every one would come back as a duplicate email. The cursor is the
@@ -276,13 +289,20 @@ nesting and CSS `:has`. That covers every current Chrome, Safari, Firefox and Ed
 excludes Internet Explorer and long-abandoned builds. It is a deliberate floor rather
 than an accident, and it is what makes the CSS in here safe to write without polyfills.
 
-Form feedback works in two layers. `required`, `type="email"`, `minlength` and
+Stimulus is used where it earns its place rather than for the sake of appearing: one
+controller disables a submit button and relabels it while the request is in flight, on
+the three forms whose submission does real work. Turbo already prevents the double
+navigation, but the button stays enabled and unchanged, so on a slow upload nothing tells
+you the click landed.
+
+Form feedback works in three layers. `required`, `type="email"`, `minlength` and
 `accept` are enforced by the browser before a request is made, and
 `.field-input:user-invalid` styles the field from its native validity state — no
 JavaScript. The server-side rules are the ones that decide, and the system tests check
 both: one asserts the browser blocks a short password before any request, and the
 server-side test uses a duplicate email, because that is the case the browser cannot
-catch.
+catch. Errors render in a summary at the top of the form rather than beside each field —
+per-field messaging is the obvious next step and is not here.
 
 Layout is Tailwind, mobile-first. The users table scrolls inside its own container on a
 phone with the name column pinned, so the row still says whose it is.
@@ -353,7 +373,10 @@ a claim like this deserves a way to check it.
   self-deletion. In a real product I would block the last admin here or require a second
   admin to confirm.
 - **No "remove avatar" control.** The brief does not ask for one, and a checkbox that
-  purges an attachment is scope I did not take.
+  purges an attachment is scope I did not take. It is the gap I would close first: once
+  an avatar is uploaded there is no way to take it back through the interface.
+- **Validation errors appear in a summary, not per field.** Adequate on forms this short,
+  and the wrong answer on a longer one.
 - **Imported users cannot sign in until they reset their password.** They are created
   with a random one. A real system would send an invitation through the mailer that is
   already wired up; the reset flow is the honest version of that without inventing
