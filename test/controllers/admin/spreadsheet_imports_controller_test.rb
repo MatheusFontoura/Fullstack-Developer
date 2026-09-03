@@ -19,14 +19,7 @@ class Admin::SpreadsheetImportsControllerTest < ActionDispatch::IntegrationTest
     get new_admin_spreadsheet_import_path
 
     assert_response :success
-  end
-
-  # Stimulus reads values from the element carrying data-controller, not from a target.
-  # On the wrong element the attribute still renders and simply never applies.
-  test "declares the submitting label on the element the controller is attached to" do
-    get new_admin_spreadsheet_import_path
-
-    assert_select "form[data-controller=form][data-form-submitting-value=?]", "Uploading…"
+    assert_select "input[type=submit][data-turbo-submits-with=?]", "Uploading…"
   end
 
   test "queues the import and sends the admin to its progress page" do

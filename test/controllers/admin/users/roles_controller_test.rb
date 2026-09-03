@@ -11,10 +11,7 @@ class Admin::Users::RolesControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "demotes an admin to user" do
-    other_admin = User.create!(
-      full_name: "Katherine Johnson", email: "katherine@umanni.test",
-      role: :admin, password: "secret-password", password_confirmation: "secret-password"
-    )
+    other_admin = create_admin
 
     patch admin_user_role_path(other_admin)
 
@@ -39,14 +36,6 @@ class Admin::Users::RolesControllerTest < ActionDispatch::IntegrationTest
     assert_equal "You cannot change your own role. Ask another admin.", flash[:alert]
   end
 
-  test "always leaves at least one admin behind" do
-    User.admin.where.not(id: users(:admin).id).find_each do |admin|
-      patch admin_user_role_path(admin)
-    end
-
-    assert_operator User.admin.count, :>=, 1
-  end
-
   test "is closed to users who are not admins" do
     sign_out
     sign_in_as users(:member)
@@ -56,4 +45,12 @@ class Admin::Users::RolesControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to profile_url
     assert_predicate users(:admin).reload, :admin?
   end
+
+  private
+    def create_admin
+      User.create!(
+        full_name: "Katherine Johnson", email: "katherine@umanni.test", role: :admin,
+        password: "secret-password", password_confirmation: "secret-password"
+      )
+    end
 end

@@ -76,6 +76,19 @@ class ProfilesControllerTest < ActionDispatch::IntegrationTest
     assert_empty cookies[:session_id].to_s
   end
 
+  test "the last admin cannot delete their own account" do
+    sign_out
+    User.admin.where.not(id: users(:admin).id).destroy_all
+    sign_in_as users(:admin)
+
+    assert_no_difference -> { User.count } do
+      delete profile_path
+    end
+
+    assert_redirected_to profile_path
+    assert_equal "The only admin cannot be deleted.", flash[:alert]
+  end
+
   test "rejects a submission that is not nested under a user key" do
     patch profile_path, params: { full_name: "Ada King" }
 

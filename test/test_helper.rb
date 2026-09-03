@@ -11,7 +11,6 @@ SimpleCov.start "rails" do
   skip "app/channels/application_cable"
   skip "config/"
 
-  group "Services", "app/services"
   group "Jobs", "app/jobs"
 
   # Parallel workers each write their own resultset; merging is what turns them back

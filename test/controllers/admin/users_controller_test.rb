@@ -107,6 +107,13 @@ class Admin::UsersControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to admin_users_path
   end
 
+  test "cannot strip the last admin of their role through the edit form" do
+    patch admin_user_path(users(:admin)), params: { user: { role: "user" } }
+
+    assert_response :unprocessable_content
+    assert_predicate users(:admin).reload, :admin?
+  end
+
   test "refuses to delete the signed in admin" do
     assert_no_difference -> { User.count } do
       delete admin_user_path(users(:admin))
