@@ -1,0 +1,20 @@
+<% content_for :title, "Your profile" %>
+
+<div class="mx-auto w-full max-w-2xl">
+  <h1 class="text-2xl font-semibold tracking-tight">Your profile</h1>
+
+  <div class="card mt-6 divide-y divide-slate-100">
+    <div class="flex items-center justify-between p-5">
+      <dt class="text-sm font-medium text-slate-500">Full name</dt>
+      <dd class="text-sm text-slate-900"><%= @user.full_name %></dd>
+    </div>
+    <div class="flex items-center justify-between p-5">
+      <dt class="text-sm font-medium text-slate-500">Email</dt>
+      <dd class="text-sm text-slate-900"><%= @user.email %></dd>
+    </div>
+    <div class="flex items-center justify-between p-5">
+      <dt class="text-sm font-medium text-slate-500">Role</dt>
+      <dd><span class="<%= @user.admin? ? "badge-admin" : "badge-user" %>"><%= @user.role.capitalize %></span></dd>
+    </div>
+  </div>
+</div>
