@@ -10,7 +10,7 @@
     <%= render "shared/form_errors", model: @spreadsheet_import %>
 
     <%= form_with model: @spreadsheet_import, url: admin_spreadsheet_imports_path, class: "space-y-5",
-          data: { controller: "form", action: "submit->form#submitting" } do |form| %>
+          data: { controller: "form", action: "submit->form#submitting", form_submitting_value: "Uploading…" } do |form| %>
       <div>
         <%= form.label :file, "Spreadsheet", class: "field-label" %>
         <%= form.file_field :file, required: true, accept: ".csv,.xlsx",
@@ -32,8 +32,7 @@
       </div>
 
       <div class="flex items-center gap-3">
-        <%= form.submit "Start import", class: "btn-primary",
-              data: { form_target: "submit", form_submitting_value: "Uploading…" } %>
+        <%= form.submit "Start import", class: "btn-primary", data: { form_target: "submit" } %>
         <%= link_to "Cancel", admin_spreadsheet_imports_path, class: "btn-secondary" %>
       </div>
     <% end %>

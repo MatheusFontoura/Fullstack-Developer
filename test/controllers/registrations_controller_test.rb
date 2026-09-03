@@ -5,6 +5,7 @@ class RegistrationsControllerTest < ActionDispatch::IntegrationTest
     get new_registration_path
 
     assert_response :success
+    assert_select "form[data-controller=form][data-form-submitting-value=?]", "Creating…"
   end
 
   test "registers a visitor and signs them in" do

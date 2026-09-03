@@ -1,5 +1,5 @@
 <%= form_with model: user, url: url, class: "space-y-5",
-      data: { controller: "form", action: "submit->form#submitting" } do |form| %>
+      data: { controller: "form", action: "submit->form#submitting", form_submitting_value: "Saving…" } do |form| %>
   <%= render "shared/form_errors", model: user %>
 
   <div>

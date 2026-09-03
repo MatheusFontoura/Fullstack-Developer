@@ -8,7 +8,7 @@
     <%= render "shared/form_errors", model: @user %>
 
     <%= form_with model: @user, url: registration_path, class: "mt-6 space-y-5",
-          data: { controller: "form", action: "submit->form#submitting" } do |form| %>
+          data: { controller: "form", action: "submit->form#submitting", form_submitting_value: "Creating…" } do |form| %>
       <div>
         <%= form.label :full_name, "Full name", class: "field-label" %>
         <%= form.text_field :full_name, required: true, autofocus: true, autocomplete: "name",
@@ -34,8 +34,7 @@
               minlength: 8, maxlength: 72, placeholder: "••••••••", class: "field-input" %>
       </div>
 
-      <%= form.submit "Create account", class: "btn-primary w-full",
-            data: { form_target: "submit", form_submitting_value: "Creating…" } %>
+      <%= form.submit "Create account", class: "btn-primary w-full", data: { form_target: "submit" } %>
     <% end %>
 
     <p class="mt-6 text-sm text-slate-500">
