@@ -1,9 +1,28 @@
-# This file should ensure the existence of records required to run the application in every environment (production,
-# development, test). The code here should be idempotent so that it can be executed at any point in every environment.
-# The data can then be loaded with the bin/rails db:seed command (or created alongside the database with db:setup).
-#
-# Example:
-#
-#   ["Action", "Comedy", "Drama", "Horror"].each do |genre_name|
-#     MovieGenre.find_or_create_by!(name: genre_name)
-#   end
+# Idempotent: running it twice leaves the same database. Passwords are fixed on
+# purpose — these are demo credentials for a reviewer, documented in the README.
+DEMO_USER_COUNT = 32
+PASSWORD = "secret-password".freeze
+
+[
+  { full_name: "Grace Hopper", email: "admin@umanni.test", role: :admin },
+  { full_name: "Ada Lovelace", email: "user@umanni.test", role: :user }
+].each do |attributes|
+  User.find_or_create_by!(email: attributes[:email]) do |user|
+    user.assign_attributes(attributes.merge(password: PASSWORD, password_confirmation: PASSWORD))
+  end
+end
+
+# Enough rows for sorting, filtering and the dashboard counters to be worth looking
+# at. Driven by the total rather than by a fixed loop count, so a second run is a
+# no-op instead of another thirty random people.
+while User.count < DEMO_USER_COUNT
+  User.create!(
+    full_name: Faker::Name.name,
+    email: Faker::Internet.unique.email(domain: "umanni.test"),
+    role: Faker::Boolean.boolean(true_ratio: 0.2) ? :admin : :user,
+    password: PASSWORD,
+    password_confirmation: PASSWORD
+  )
+end
+
+puts "Seeded #{User.count} users (#{User.admin.count} admins). Password for all: #{PASSWORD}"

@@ -53,4 +53,15 @@ Rails.application.configure do
 
   # Raise error when a before_action's only/except options reference missing actions.
   config.action_controller.raise_on_missing_callback_actions = true
+
+  # Non-secret keys, committed on purpose: Active Record encryption has to be
+  # configured for the application to boot, and a reviewer cloning this repository
+  # has no master.key. Production reads the real keys from encrypted credentials.
+  config.active_record.encryption.primary_key = "s1jnxp0gDiOTkHHvrvYJ5018UMuFpZY1"
+  config.active_record.encryption.deterministic_key = "tjmrQSRmWUw4nIJTuYT0eWNm85y2bn6F"
+  config.active_record.encryption.key_derivation_salt = "3qUI2aAmXJDZ0NhO0EYxvfJRmf0llZg9"
+
+  # Fixtures are written to the database directly, bypassing the model. Without this
+  # the encrypted columns would hold plaintext and every read would fail to decrypt.
+  config.active_record.encryption.encrypt_fixtures = true
 end
