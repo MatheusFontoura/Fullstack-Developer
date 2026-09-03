@@ -1,33 +1,39 @@
 require "test_helper"
 
 class SessionsControllerTest < ActionDispatch::IntegrationTest
-  setup { @user = User.take }
-
-  test "new" do
+  test "renders the sign in form" do
     get new_session_path
+
     assert_response :success
   end
 
-  test "create with valid credentials" do
-    post session_path, params: { email_address: @user.email_address, password: "password" }
+  test "signs in with valid credentials" do
+    post session_path, params: { session: { email: users(:member).email, password: "secret-password" } }
 
-    assert_redirected_to root_path
-    assert cookies[:session_id]
+    assert_redirected_to profile_path
+    assert_predicate cookies[:session_id], :present?
   end
 
-  test "create with invalid credentials" do
-    post session_path, params: { email_address: @user.email_address, password: "wrong" }
+  test "re-renders the form with an alert on invalid credentials" do
+    post session_path, params: { session: { email: users(:member).email, password: "wrong" } }
 
-    assert_redirected_to new_session_path
-    assert_nil cookies[:session_id]
+    assert_response :unprocessable_content
+    assert_empty cookies[:session_id].to_s
   end
 
-  test "destroy" do
-    sign_in_as(User.take)
+  test "rejects a login attempt with a malformed parameter structure" do
+    post session_path, params: { email: users(:member).email, password: "secret-password" }
+
+    assert_response :bad_request
+    assert_empty cookies[:session_id].to_s
+  end
+
+  test "signs out" do
+    sign_in_as users(:member)
 
     delete session_path
 
     assert_redirected_to new_session_path
-    assert_empty cookies[:session_id]
+    assert_empty cookies[:session_id].to_s
   end
 end
