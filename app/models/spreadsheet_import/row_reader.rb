@@ -16,8 +16,13 @@ class SpreadsheetImport
       @sheet = Roo::Spreadsheet.open(path.to_s, extension: extension.to_sym)
     end
 
+    # Counted by walking the rows rather than trusting last_row: spreadsheets saved from
+    # Excel routinely carry trailing empty rows, and counting those makes every one of
+    # them a phantom rejected row and the progress bar wrong.
     def row_count
-      [ @sheet.last_row.to_i - HEADER_ROW, 0 ].max
+      count = 0
+      each_row { count += 1 }
+      count
     end
 
     # Yields each data row's attributes with its line number in the file, so an error
@@ -26,7 +31,10 @@ class SpreadsheetImport
       header = normalized_header
 
       ((HEADER_ROW + 1)..@sheet.last_row.to_i).each do |line|
-        yield attributes_from(header, @sheet.row(line)), line
+        attributes = attributes_from(header, @sheet.row(line))
+        next if attributes.values.all?(&:blank?)
+
+        yield attributes, line
       end
     end
 

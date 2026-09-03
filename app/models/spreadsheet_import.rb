@@ -24,10 +24,6 @@ class SpreadsheetImport < ApplicationRecord
     processed_rows * 100 / total_rows
   end
 
-  def finished?
-    completed? || failed?
-  end
-
   def imported_rows
     processed_rows - failed_rows
   end

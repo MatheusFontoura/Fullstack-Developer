@@ -25,11 +25,8 @@ class SpreadsheetImportJob < ApplicationJob
       broadcast_progress
       broadcast_dashboard
     end
-  # An interruption is the continuation working as designed: the worker is shutting
-  # down and the job will resume from its cursor. Letting it fall through to the
-  # rescue below would mark a healthy import as failed.
-  rescue ActiveJob::Continuation::Interrupt
-    raise
+  # Continuation::Interrupt descends from Exception, not StandardError, so a worker
+  # shutting down mid-file passes through here untouched and resumes from its cursor.
   rescue StandardError => error
     # The reason belongs on the record. Otherwise the admin sees a red badge and has to
     # be told to go read a jobs table to find out what went wrong.
@@ -43,7 +40,7 @@ class SpreadsheetImportJob < ApplicationJob
     def start_import(row_count)
       @import.update!(
         status: :processing, total_rows: row_count,
-        processed_rows: 0, failed_rows: 0, row_errors: []
+        processed_rows: 0, failed_rows: 0, row_errors: [], failure_reason: nil
       )
       broadcast_progress
     end
@@ -86,16 +83,26 @@ class SpreadsheetImportJob < ApplicationJob
     # One malformed line in a thousand must not cost the other nine hundred.
     def record_row(attributes, line)
       user = User.new(attributes.merge(password: SecureRandom.base58(24)))
-      # A role the file does not recognise is not worth failing a row over, and it is
-      # certainly not worth trusting: unknown values become plain users.
+      # An unrecognised role is not worth failing a row over, and not worth trusting.
       user.role = :user unless User.roles.key?(attributes[:role])
 
       if user.save
         SpreadsheetImport.update_counters(@import.id, processed_rows: 1)
       else
-        SpreadsheetImport.update_counters(@import.id, processed_rows: 1, failed_rows: 1)
-        @row_errors << { "line" => line, "message" => user.errors.full_messages.to_sentence }
+        reject_row(line, user.errors.full_messages.to_sentence)
       end
+    rescue ActiveRecord::RecordNotUnique
+      # Validation checks uniqueness, then the insert races another writer between the
+      # two. Without this the whole import dies on a row the file was right about.
+      reject_row(line, "Email has already been taken")
+    end
+
+    def reject_row(line, message)
+      SpreadsheetImport.update_counters(@import.id, processed_rows: 1, failed_rows: 1)
+      @row_errors << { "line" => line, "message" => message }
+      # Written straight away rather than with the next batch: rejections are rare, and
+      # an interruption between here and the batch would lose the reason for one.
+      persist
     end
 
     # Counters are incremented per row because they are cheap and the bar reads them.
