@@ -7,7 +7,7 @@ class PasswordsController < ApplicationController
   end
 
   def create
-    if user = User.find_by(email: params[:email])
+    if (user = User.find_by(email: reset_request_params[:email]))
       PasswordsMailer.reset(user).deliver_later
     end
 
@@ -18,7 +18,7 @@ class PasswordsController < ApplicationController
   end
 
   def update
-    if @user.update(params.permit(:password, :password_confirmation))
+    if @user.update(new_password_params)
       @user.sessions.destroy_all
       redirect_to new_session_path, notice: "Password has been reset."
     else
@@ -30,6 +30,14 @@ class PasswordsController < ApplicationController
   end
 
   private
+    def reset_request_params
+      params.expect(password_reset: [ :email ])
+    end
+
+    def new_password_params
+      params.expect(password_reset: [ :password, :password_confirmation ])
+    end
+
     def set_user_by_token
       @user = User.find_by_password_reset_token!(params[:token])
     rescue ActiveSupport::MessageVerifier::InvalidSignature
