@@ -15,15 +15,17 @@
       </div>
     </div>
 
-    <div class="flex items-center justify-between p-5">
-      <dt class="text-sm font-medium text-slate-500">Role</dt>
-      <dd><span class="<%= @user.admin? ? "badge-admin" : "badge-user" %>"><%= @user.role.capitalize %></span></dd>
-    </div>
+    <dl class="divide-y divide-slate-100">
+      <div class="flex items-center justify-between p-5">
+        <dt class="text-sm font-medium text-slate-500">Role</dt>
+        <dd><span class="<%= @user.admin? ? "badge-admin" : "badge-user" %>"><%= @user.role.capitalize %></span></dd>
+      </div>
 
-    <div class="flex items-center justify-between p-5">
-      <dt class="text-sm font-medium text-slate-500">Member since</dt>
-      <dd class="text-sm text-slate-900"><%= @user.created_at.to_date.to_fs(:long) %></dd>
-    </div>
+      <div class="flex items-center justify-between p-5">
+        <dt class="text-sm font-medium text-slate-500">Member since</dt>
+        <dd class="text-sm text-slate-900"><%= @user.created_at.to_date.to_fs(:long) %></dd>
+      </div>
+    </dl>
   </div>
 
   <div class="card mt-6 p-5">
