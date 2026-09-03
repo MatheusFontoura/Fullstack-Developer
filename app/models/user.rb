@@ -9,6 +9,7 @@ class User < ApplicationRecord
 
   has_secure_password
   has_many :sessions, dependent: :destroy
+  has_many :spreadsheet_imports, dependent: :destroy
   has_one_attached :avatar_image
 
   # Deterministic so the column stays queryable and uniquely indexable. The cost is

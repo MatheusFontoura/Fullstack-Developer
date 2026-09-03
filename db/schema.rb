@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_09_03_150128) do
+ActiveRecord::Schema[8.1].define(version: 2026_09_03_153213) do
   create_table "active_storage_attachments", force: :cascade do |t|
     t.bigint "blob_id", null: false
     t.datetime "created_at", null: false
@@ -48,6 +48,19 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_03_150128) do
     t.index ["user_id"], name: "index_sessions_on_user_id"
   end
 
+  create_table "spreadsheet_imports", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.integer "failed_rows", default: 0, null: false
+    t.integer "processed_rows", default: 0, null: false
+    t.json "row_errors", default: [], null: false
+    t.string "status", default: "pending", null: false
+    t.integer "total_rows", default: 0, null: false
+    t.datetime "updated_at", null: false
+    t.integer "user_id", null: false
+    t.index ["user_id"], name: "index_spreadsheet_imports_on_user_id"
+    t.check_constraint "status IN ('pending', 'processing', 'completed', 'failed')", name: "spreadsheet_imports_status_check"
+  end
+
   create_table "users", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "email", null: false
@@ -62,4 +75,5 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_03_150128) do
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
   add_foreign_key "sessions", "users"
+  add_foreign_key "spreadsheet_imports", "users"
 end
