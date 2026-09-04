@@ -130,21 +130,21 @@ the same time.
 ## Testing
 
 ```bash
-bin/rails test:all      # unit, integration and system — 135 tests
+bin/rails test:all      # unit, integration and system — 141 tests
 bin/rails test          # skips system tests
 bin/ci                  # the whole pipeline: lint, audits, Brakeman, tests, seeds
 ```
 
 | Layer | Files | Tests |
 |---|---|---|
-| Models and POROs | 3 | 23 |
-| Controllers | 8 | 67 |
+| Models and POROs | 3 | 24 |
+| Controllers | 8 | 70 |
 | Integration (incl. security) | 2 | 12 |
-| Jobs | 1 | 9 |
-| System (real Chrome) | 5 | 21 |
+| Jobs | 1 | 10 |
+| System (real Chrome) | 5 | 22 |
 | Configuration | 1 | 3 |
 
-**135 tests, 447 assertions, 98.66% line coverage, 93.58% branch coverage.** Tests run
+**141 tests, 512 assertions, 98.94% line coverage, 93.90% branch coverage.** Tests run
 in parallel across one process per core, and SimpleCov results are merged per worker —
 without that merge the report shows roughly one worker's share and every number after it
 is fiction. The 90% floor is enforced under `CI` or `COVERAGE`.
@@ -259,8 +259,11 @@ places user input reaches a query are covered directly: search escapes its term 
 `Rails/OutputSafety` keeps it that way. SVG is absent from the allowed avatar types: a
 stored SVG is a stored script, and Active Storage serves attachments from this origin.
 Behind that sits a Content Security Policy of `default-src 'none'` with a per-response
-nonce for the import map — escaping can be undone by one careless `html_safe`, a policy
-cannot. Three tests store markup in a name, a validation message and an import's row
+nonce for scripts and styles — escaping can be undone by one careless `html_safe`, a
+policy cannot. Style *attributes* are allowed, because the import progress bar's width
+is a computed value; `script-src`, which is where XSS lives, stays closed. Every system
+test fails if the browser reports a policy violation, which is how the first version of
+this policy was caught silently breaking that same progress bar. Three tests store markup in a name, a validation message and an import's row
 errors, and assert it comes back escaped.
 
 **CSRF.** Rails' token protection is on and every state change goes through `form_with`

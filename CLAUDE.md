@@ -90,8 +90,12 @@
 - Error responses render with `status: :unprocessable_content`; destroy redirects use `status: :see_other`.
 - Submit-button state comes from Turbo's `data-turbo-submits-with`, not from Stimulus. The one Stimulus controller
   (`image_preview`) does what Turbo cannot: reads a chosen `File` client-side and revokes the object URL on disconnect.
-- A Content Security Policy of `default-src 'none'` is enforced, with a per-response nonce for the import map. Adding
-  an external script or stylesheet means updating `config/initializers/content_security_policy.rb`.
+- A Content Security Policy of `default-src 'none'` is enforced, with a per-response nonce for scripts and styles and
+  `style-src-attr 'unsafe-inline'` for computed widths. Adding an external script or stylesheet means updating
+  `config/initializers/content_security_policy.rb`. `ApplicationSystemTestCase` fails any test whose page reports a
+  violation — a blocked style breaks the interface without failing a single DOM assertion.
+- Never pass `request.query_parameters` to `url_for`. It hands the router `host`, `protocol` and `controller` from the
+  query string: pagination links get rewritten to another domain, and a bad `controller` is a 500.
 
 ## Gotchas
 
