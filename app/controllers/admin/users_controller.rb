@@ -6,7 +6,7 @@ module Admin
       # Only these reach a link or a query. Passing request.query_parameters straight to
       # url_for lets a crafted ?host= rewrite the pagination links, and a ?controller=
       # raise on a route that does not exist.
-      @filters = params.permit(:query, :role).to_h.compact_blank
+      @filters = params.permit(:query, :role, :page).to_h.compact_blank.except("page")
       @page = Pagination.new(filtered_users.ordered, page: params[:page])
     end
 

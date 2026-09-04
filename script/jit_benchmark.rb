@@ -1,9 +1,6 @@
-# Measures a render-heavy path under YJIT and ZJIT, so the choice rests on numbers from
-# this machine rather than on a blog post. Rails turns YJIT on by default, so there is no
-# plain-interpreter column to compare against without disabling that.
-#
-# A fresh container has no database and this builds User objects, so prepare one in the
-# same command:
+# Renders a partial under YJIT and ZJIT. Rails turns YJIT on by default, so there is no
+# plain-interpreter column without disabling it. Needs a database, and a master key the
+# image can read — regenerate credentials first if you do not have one:
 #
 #   docker run --rm -e RUBYOPT=--yjit umanni:prod \
 #     sh -c "bin/rails db:prepare && bin/rails runner script/jit_benchmark.rb"
@@ -13,8 +10,8 @@
 # No benchmark gem: it stopped being a default gem in Ruby 4, and a monotonic clock
 # is all this needs.
 
-ITERATIONS = Integer(ENV.fetch("ITERATIONS", 5_000))
-WARMUP = Integer(ENV.fetch("WARMUP", 500))
+ITERATIONS = Integer(ENV.fetch("ITERATIONS", 20_000))
+WARMUP = Integer(ENV.fetch("WARMUP", 5_000))
 
 users = Array.new(50) do |index|
   User.new(id: index + 1, full_name: "Benchmark Person #{index}", email: "bench#{index}@umanni.test",
@@ -28,7 +25,6 @@ def jit_name
   "interpreter"
 end
 
-# Warm the compiler and the template cache before the measured run.
 WARMUP.times { |i| ApplicationController.render(partial: "admin/users/user", locals: { user: users[i % 50] }) }
 
 started_at = Process.clock_gettime(Process::CLOCK_MONOTONIC)

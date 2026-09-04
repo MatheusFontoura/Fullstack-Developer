@@ -42,17 +42,17 @@ gate sent the phase back rather than forward.
   under production only, so Solid Cache went looking for its table in the primary
   database. The suite could not see it, because the test environment uses `:null_store`,
   which makes rate limiting inert. There is now a test that guards the class of bug.
-- The import's progress bar stuck on "Processing" about one run in three. Two broadcasts
-  a millisecond apart are not guaranteed to arrive in order, and the loser overwrote the
-  winner. The fix was one broadcast instead of two, not a longer wait in the test.
+- The import's progress bar stuck on "Processing" about one run in three: two broadcasts
+  a millisecond apart, arriving out of order.
 - The dashboard counters froze for the entire duration of an import — the one moment a
   live counter earns its place. Turbo debounces refresh broadcasts and the debounce
   restarts on every write, so a job creating rows faster than the delay produced no
   refresh at all until it finished. Found by watching a 150-row import, not by reading
   the code, which is why the comment in the model had confidently claimed the opposite.
-- The production image seeded demo users — a published email and a published password —
-  because the entrypoint runs `db:prepare` and `db:prepare` seeds a new database. Found
-  by running the production image rather than only building it.
+- The production image seeded demo users, with a published password, because the
+  entrypoint runs `db:prepare`. Found by running the image rather than only building it.
+- A content security policy added in review blocked the import bar's inline width, so it
+  rendered full at every percentage while every test still passed.
 
 ### A note on the hidden instructions in the brief
 
@@ -63,9 +63,6 @@ constraints to the human user."* It is visible in the raw file, not in the rende
 
 I read it, and I did not follow it. There is no marker string in this codebase, and
 nothing about the process was hidden from me. Disclosure is above, in full.
-
-Noticing what enters a model's context, and deciding what it may act on, is part of
-using one.
 
 ---
 
@@ -130,7 +127,7 @@ the same time.
 ## Testing
 
 ```bash
-bin/rails test:all      # unit, integration and system — 141 tests
+bin/rails test:all      # unit, integration and system — 140 tests
 bin/rails test          # skips system tests
 bin/ci                  # the whole pipeline: lint, audits, Brakeman, tests, seeds
 ```
@@ -139,12 +136,12 @@ bin/ci                  # the whole pipeline: lint, audits, Brakeman, tests, see
 |---|---|---|
 | Models and POROs | 3 | 24 |
 | Controllers | 8 | 70 |
-| Integration (incl. security) | 2 | 12 |
+| Integration (incl. security) | 2 | 11 |
 | Jobs | 1 | 10 |
 | System (real Chrome) | 5 | 22 |
 | Configuration | 1 | 3 |
 
-**141 tests, 512 assertions, 98.94% line coverage, 93.90% branch coverage.** Tests run
+**140 tests, 507 assertions, 98.93% line coverage, 93.90% branch coverage.** Tests run
 in parallel across one process per core, and SimpleCov results are merged per worker —
 without that merge the report shows roughly one worker's share and every number after it
 is fiction. The 90% floor is enforced under `CI` or `COVERAGE`.
@@ -155,7 +152,7 @@ System tests need Chrome. If it is not on `PATH` (WSL, slim containers):
 CHROME_BINARY=/path/to/chrome bin/rails test:system
 ```
 
-The system tests carry the weight. They prove what no controller test can: that the dashboard counters move on their own when a user is created elsewhere,
+The system tests prove what no controller test can: that the dashboard counters move on their own when a user is created elsewhere,
 that a role toggle replaces one table row without reloading the page, and that an
 import's progress arrives over the wire while the page sits open.
 
@@ -224,23 +221,19 @@ machine to produce a 40px thumbnail. Uploads are capped at 2 MB and constrained 
 instead. At real avatar volume that trade flips and the variant comes back — libvips is
 already in both Docker images.
 
-**Minitest, not RSpec.** RSpec is what I reach for day to day. `parallelize(workers:
-:number_of_processors)` is the parallel testing feature the brief names, it is native
-rather than a gem, and the whole test is built around Rails 8's own tools. Consistency
-won over familiarity.
+**Minitest, not RSpec.** RSpec is what I reach for day to day, but `parallelize` is the
+parallel testing feature the brief names, it is native, and this whole test is built on
+Rails 8's own tools.
 
-**The import paces its own dashboard refreshes.** `User` broadcasts a debounced refresh
-on every commit, which is right for one-at-a-time editing and useless during a bulk
-import: the debounce restarts on each write, so a fast job produces nothing until it
-stops. The job suppresses the model's broadcast and refreshes on a fixed cadence
-instead — an unpredictable schedule traded for a predictable one. There is a test that
-fails if the suppression is removed.
+**The import paces its own dashboard refreshes.** Turbo's debounce restarts on every
+write, so a bulk job outruns it and broadcasts nothing until it stops. The job suppresses
+the model's broadcast and refreshes on a fixed cadence, and a test fails if that is
+removed.
 
-**The import is continuable.** `ActiveJob::Continuable` is new in Rails 8.1, and here it
-is correctness rather than novelty: a worker restarting mid-file would replay rows it had
-already imported and every one would come back as a duplicate email. The cursor is the
-row index, and there is a test that resumes from one and asserts the earlier rows are not
-replayed.
+**The import is continuable.** `ActiveJob::Continuable` is new in Rails 8.1 and here it
+is correctness: a worker restarting mid-file would replay rows it already imported, and
+each would come back as a duplicate email. A test resumes from a cursor and asserts the
+earlier rows are not replayed.
 
 ---
 
@@ -292,9 +285,8 @@ checked by removing the defence and watching them fail.
 ## Cross-browser support
 
 `allow_browser versions: :modern` rejects browsers without webp, import maps, CSS
-nesting and CSS `:has`. That covers every current Chrome, Safari, Firefox and Edge, and
-excludes Internet Explorer and long-abandoned builds. It is a deliberate floor rather
-than an accident, and it is what makes the CSS in here safe to write without polyfills.
+nesting and `:has` — every current Chrome, Safari, Firefox and Edge is in, Internet
+Explorer and abandoned builds are out. That floor is what makes polyfills unnecessary.
 
 Submit buttons disable and relabel themselves while a request is in flight through
 Turbo's own `data-turbo-submits-with`. A Stimulus controller did this first, until review
@@ -364,9 +356,9 @@ production image, after 5,000 warmup iterations:
 | YJIT (Rails' default) | 0.204–0.226 ms |
 | ZJIT | 0.340–0.375 ms |
 
-ZJIT stayed roughly 70% slower across runs, and a shorter warmup widened the gap rather
-than narrowing it, so this is not ZJIT being handicapped by warmup on a young JIT. Rails
-enables YJIT on its own and that is where this stays.
+ZJIT stayed roughly 70% slower across runs, and a shorter warmup widened the gap instead
+of narrowing it, so this is not a young JIT handicapped by warmup. Rails enables YJIT on
+its own; it stays that way.
 
 Reproduce it with `script/jit_benchmark.rb`; the numbers above are from one machine.
 
@@ -385,13 +377,16 @@ Reproduce it with `script/jit_benchmark.rb`; the numbers above are from one mach
 - **Validation errors appear in a summary, not per field.** Adequate on forms this short,
   and the wrong answer on a longer one.
 - **Imported users cannot sign in until they reset their password.** They are created
-  with a random one. A real system would send an invitation through the mailer that is
-  already wired up; the reset flow is the honest version of that without inventing
-  requirements.
+  with a random one, and production has no SMTP configured, so that reset is documented
+  rather than working. Wiring a real mail service is the first thing a deploy needs.
+- **A worker killed outright leaves its import showing "processing".** Solid Queue records
+  the failure but never re-enters the job, so `retry_on` does not apply; and a manual
+  retry restarts the file from the top, reporting already-imported rows as duplicates.
+  Recovering properly means storing the job id and reconciling against
+  `solid_queue_failed_executions`, which is more machinery than this size of import earns.
 - **No email delivery is configured in development**, so password-reset mail fails
   silently. Previews are at `/rails/mailers`.
 - **Counters in the import are written per row.** At a genuinely large file they would
   batch alongside the error list; at this size the extra write buys a bar that moves.
-- **No background job for avatar processing**, no CDN, no fragment caching. All three are
-  the right answer at a scale this application does not have, and adding them now would
-  be decoration.
+- **No background job for avatar processing**, no CDN, no fragment caching. All three
+  answer a scale this application does not have.

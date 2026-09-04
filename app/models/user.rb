@@ -1,6 +1,5 @@
 class User < ApplicationRecord
-  # SVG is absent on purpose. A stored SVG is a stored script, and Active Storage
-  # serves attachments from the application's own origin.
+  # No SVG: a stored SVG is a stored script, served from this origin.
   AVATAR_CONTENT_TYPES = %w[ image/png image/jpeg image/webp ].freeze
   AVATAR_MAX_SIZE = 2.megabytes
 
@@ -11,20 +10,15 @@ class User < ApplicationRecord
   has_many :spreadsheet_imports, dependent: :destroy
   has_one_attached :avatar_image
 
-  # Deterministic so the column stays queryable and uniquely indexable. The cost is
-  # that partial matching is gone: no LIKE on email, ever. The admin list searches
-  # full_name, which is deliberately left in plaintext for that reason.
+  # Deterministic so the column stays uniquely indexable and findable by exact value.
+  # The cost is that LIKE on email is impossible; full_name stays in plaintext.
   encrypts :email, deterministic: true
 
   enum :role, { user: "user", admin: "admin" }, default: :user, validate: true
 
   # A lambda, not the bare symbol: the macro calls `send` on the record for anything
   # that does not respond to `call`, so `:dashboard` would look for User#dashboard.
-  #
-  # Turbo debounces these, and the debounce restarts on every write. A bulk import
-  # writing faster than the delay therefore produces no broadcast at all until it
-  # stops — which is why SpreadsheetImportJob suppresses this and paces the dashboard
-  # itself rather than relying on the callback.
+  # SpreadsheetImportJob suppresses this during bulk writes; the note is there.
   broadcasts_refreshes_to ->(_user) { DASHBOARD_STREAM }
 
   normalizes :email, with: ->(email) { email.strip.downcase }
@@ -33,16 +27,14 @@ class User < ApplicationRecord
   validates :email, presence: true, uniqueness: true, format: { with: URI::MailTo::EMAIL_REGEXP }
   validates :password, length: { minimum: 8 }, allow_nil: true
   validate :avatar_image_must_be_a_supported_image
-  # The system has to keep someone able to administer it. The rule lives here because
-  # there are three ways to break it — the role toggle, the admin edit form and a user
-  # deleting their own profile — and a rule enforced in one controller out of three is
-  # not enforced.
+  # Enforced here because three routes can strip an admin: the role toggle, the admin
+  # edit form, and a user deleting their own profile.
   validate :last_admin_keeps_the_role, on: :update
+  # prepend so the check runs before the dependent: :destroy associations do their work.
   before_destroy :last_admin_is_not_deletable, prepend: true
 
   scope :ordered, -> { order(:full_name, :id) }
-  # Deterministic encryption rules out a partial match on email but not an exact one,
-  # so an address is looked up whole and anything else searches the name.
+  # An exact email still matches under deterministic encryption; a partial one cannot.
   scope :matching, ->(term) {
     term = term.to_s.strip
     if term.include?("@")
@@ -57,9 +49,8 @@ class User < ApplicationRecord
   end
 
   private
-    # Reads then decides, which is a race on any database that lets two writers in at
-    # once. SQLite does not — the adapter opens with BEGIN IMMEDIATE, so the second
-    # save blocks before it validates. On PostgreSQL this would need a lock.
+    # Check-then-act. Safe only because the SQLite adapter opens with BEGIN IMMEDIATE;
+    # PostgreSQL would need a lock.
     def another_admin_exists?
       self.class.admin.where.not(id: id).exists?
     end
@@ -72,8 +63,7 @@ class User < ApplicationRecord
     end
 
     def last_admin_is_not_deletable
-      # role_in_database, not role: an unsaved change to the attribute must not decide
-      # whether the row may go.
+      # role_in_database, not role: an unsaved change must not decide this.
       return unless role_in_database == "admin"
       return if another_admin_exists?
 

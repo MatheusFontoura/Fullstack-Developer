@@ -2,20 +2,8 @@ class SpreadsheetImportJob < ApplicationJob
   include ActiveJob::Continuable
   include ActionView::RecordIdentifier
 
-  # A progress bar does not need to move once per row, and broadcasting per row would
-  # put a thousand messages on the wire for a thousand-row file.
   BROADCAST_EVERY = 10
-
-  # The dashboard is a coarser view than the bar, so it is refreshed less often.
   DASHBOARD_EVERY = 50
-
-  # A worker killed outright raises nothing in-process, so the rescue below never runs
-  # and the import would sit at "processing" for good. Retrying is safe precisely
-  # because the continuation resumes from its cursor instead of replaying the file.
-  retry_on SolidQueue::Processes::ProcessExitError,
-           SolidQueue::Processes::ProcessPrunedError,
-           SolidQueue::Processes::ThreadTerminatedError,
-           wait: 5.seconds, attempts: 3
 
   def perform(spreadsheet_import)
     @import = spreadsheet_import
@@ -33,8 +21,7 @@ class SpreadsheetImportJob < ApplicationJob
       broadcast_progress
       broadcast_dashboard
     end
-  # Continuation::Interrupt descends from Exception, not StandardError, so a worker
-  # shutting down mid-file passes through here untouched and resumes from its cursor.
+  # Continuation::Interrupt is an Exception, not a StandardError. Do not widen this.
   rescue StandardError => error
     # The reason belongs on the record. Otherwise the admin sees a red badge and has to
     # be told to go read a jobs table to find out what went wrong.
@@ -56,11 +43,8 @@ class SpreadsheetImportJob < ApplicationJob
     def import_rows(reader, step)
       @row_errors = @import.row_errors.dup
 
-      # Every created user would otherwise fire User's debounced dashboard refresh, and
-      # that debounce restarts on each write: a run creating rows faster than the delay
-      # produces no refresh at all until it finishes, which is precisely when a live
-      # counter would be worth having. Suppressing the callback and pacing the refresh
-      # here trades an unpredictable cadence for a fixed one.
+      # Turbo's refresh debounce restarts on every write, so a bulk job outruns it and
+      # broadcasts nothing until it stops. Suppress it and pace the refresh here.
       User.suppressing_turbo_broadcasts do
         reader.each_row do |attributes, line|
           index = line - (SpreadsheetImport::RowReader::HEADER_ROW + 1)
@@ -72,9 +56,8 @@ class SpreadsheetImportJob < ApplicationJob
         end
       end
 
-      # Deliberately no broadcast here: :finish sends one immediately afterwards, and
-      # two messages a millisecond apart are not guaranteed to arrive in that order.
-      # The loser overwrites the winner, and the page ends up stuck on "Processing".
+      # No broadcast: :finish sends one straight after, and two a millisecond apart can
+      # arrive out of order, leaving the page stuck on "Processing".
       persist
     end
 
@@ -87,11 +70,9 @@ class SpreadsheetImportJob < ApplicationJob
       broadcast_dashboard if (processed % DASHBOARD_EVERY).zero?
     end
 
-    # A bad row is data, not an exception: it is counted, described and stepped over.
-    # One malformed line in a thousand must not cost the other nine hundred.
+    # A bad row is rejected and counted; it never aborts the run.
     def record_row(attributes, line)
       user = User.new(attributes.merge(password: SecureRandom.base58(24)))
-      # An unrecognised role is not worth failing a row over, and not worth trusting.
       user.role = :user unless User.roles.key?(attributes[:role])
 
       if user.save
@@ -100,22 +81,17 @@ class SpreadsheetImportJob < ApplicationJob
         reject_row(line, user.errors.full_messages.to_sentence)
       end
     rescue ActiveRecord::RecordNotUnique
-      # Validation checks uniqueness, then the insert races another writer between the
-      # two. Without this the whole import dies on a row the file was right about.
+      # Validation checks uniqueness, then another writer wins the race to the index.
       reject_row(line, "Email has already been taken")
     end
 
     def reject_row(line, message)
       SpreadsheetImport.update_counters(@import.id, processed_rows: 1, failed_rows: 1)
       @row_errors << { "line" => line, "message" => message }
-      # Written straight away rather than with the next batch: rejections are rare, and
-      # an interruption between here and the batch would lose the reason for one.
+      # Written now, not with the next batch: an interruption would lose the reason.
       persist
     end
 
-    # Counters move per row because they are cheap and the bar reads them. Rejections
-    # write immediately, which costs a rewrite of the JSON column per bad row — the
-    # trade for not losing the reason when a worker is interrupted mid-batch.
     def persist(status: nil)
       @import.reload
       @import.update!({ row_errors: @row_errors || @import.row_errors, status: status }.compact)
