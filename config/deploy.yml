@@ -10,9 +10,7 @@ servers:
   web:
     - 192.0.2.1
 
-# Zero-downtime deploys and automatic Let's Encrypt certificates through kamal-proxy.
-# assume_ssl and force_ssl are already on in config/environments/production.rb, which
-# is what makes terminating TLS here safe.
+# TLS terminates here; assume_ssl and force_ssl are on in production.rb.
 proxy:
   ssl: true
   host: umanni.example.com
@@ -29,13 +27,8 @@ env:
   secret:
     - RAILS_MASTER_KEY
   clear:
-    # The Solid Queue supervisor runs inside Puma rather than as a separate job role,
-    # and that is a consequence of the database choice rather than a shortcut: SQLite
-    # is a file, not a server, so a worker on a second machine could not reach it.
-    #
-    # Splitting jobs onto their own host is the moment this application would move to
-    # PostgreSQL. Splitting them into a second container on the *same* host would work
-    # today — both would share the storage volume — but buys little at this size.
+    # Solid Queue runs inside Puma because SQLite is a file: a worker on another host
+    # could not reach it. Splitting jobs off means moving to PostgreSQL.
     SOLID_QUEUE_IN_PUMA: true
     JOB_CONCURRENCY: 2
     # Read by config/puma.rb, and by Action Mailer for the links in a password reset.
@@ -47,14 +40,11 @@ aliases:
   logs: app logs -f
   dbc: app exec --interactive --reuse "bin/rails dbconsole"
 
-# The four SQLite databases and Active Storage's uploads all live here. This is the
-# only stateful thing on the server, so it is the only thing that needs backing up —
-# point it at a mounted volume that is backed up off the machine.
+# The four databases and every upload. The only stateful thing on the server.
 volumes:
   - "umanni_storage:/rails/storage"
 
-# Keeps fingerprinted assets from the previous version around during a deploy, so a
-# request already in flight does not 404 on a stylesheet.
+# Keeps the previous version's assets so an in-flight request does not 404.
 asset_path: /rails/public/assets
 
 builder:

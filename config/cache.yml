@@ -5,10 +5,8 @@ default: &default
     max_size: <%= 256.megabytes %>
     namespace: <%= Rails.env %>
 
-# Development runs Solid Cache like production does, so it needs to be pointed at the
-# cache database just the same. Without this the store falls back to the primary
-# database, where solid_cache_entries does not exist, and every rate-limited action
-# raises on its first cache write.
+# Without this the store falls back to the primary database, where
+# solid_cache_entries does not exist, and every rate-limited action raises.
 development:
   database: cache
   <<: *default

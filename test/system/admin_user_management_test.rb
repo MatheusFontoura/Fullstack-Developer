@@ -21,8 +21,7 @@ class AdminUserManagementTest < ApplicationSystemTestCase
     assert_text "katherine@umanni.test"
   end
 
-  # A duplicate email is the interesting case: minlength and type=email are caught by
-  # the browser before a request is made, so only a server-side rule exercises this path.
+  # minlength and type=email never reach the server; a duplicate email does.
   test "shows a server-side validation error without losing the form" do
     click_on "New user"
 
@@ -51,7 +50,6 @@ class AdminUserManagementTest < ApplicationSystemTestCase
 
     assert_text "Ada Lovelace is now an admin."
     within("tr", text: "Ada Lovelace") { assert_text "Admin" }
-    # The row was replaced by a Turbo Stream, so the search form is untouched.
     assert_field "Search by name", with: ""
   end
 

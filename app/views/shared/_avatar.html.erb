@@ -1,10 +1,7 @@
-<%# Avatars are served at their uploaded size and constrained by CSS. Generating
-    variants would pull libvips into every developer's machine for a 40px thumbnail;
-    uploads are capped at 2 MB instead. See README for when that trade flips. %>
+<%# No variants: that would put libvips on every machine for a 40px thumbnail. %>
 <% size = local_assigns.fetch(:size, "size-10") %>
 
-<%# The attachment has to be saved, not merely assigned: re-rendering the form after a
-    failed create would otherwise ask for a URL to a blob that has no id yet. %>
+<%# Saved, not merely assigned: a failed create would ask for a URL to an id-less blob. %>
 <% if user.avatar_image.attachment&.persisted? %>
   <%= image_tag user.avatar_image,
         alt: user.full_name,

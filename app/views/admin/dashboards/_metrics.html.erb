@@ -7,7 +7,6 @@
   <% User.roles.each_key do |role| %>
     <div class="card p-5">
       <p class="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-slate-500">
-        <%# Identity travels on the dot, so the label and the number stay in ink. %>
         <span class="size-2 rounded-full <%= role == "admin" ? "bg-brand-600" : "bg-slate-400" %>"></span>
         <%= role.pluralize.capitalize %>
       </p>

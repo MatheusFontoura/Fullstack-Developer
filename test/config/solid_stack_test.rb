@@ -1,10 +1,8 @@
 require "test_helper"
 
-# Development is configured to run the same Solid adapters as production, which only
-# helps if both are pointed at the same databases. This caught a real failure: cache.yml
-# named the cache database under production alone, so in development the store looked
-# for solid_cache_entries in the primary database and every rate-limited action raised
-# on its first write. The test suite never saw it, because test uses :null_store.
+# Development runs the same Solid adapters as production, which only helps if both are
+# pointed at the same databases. cache.yml once named the cache database under
+# production alone, and every rate-limited action raised in development.
 class SolidStackTest < ActiveSupport::TestCase
   ENVIRONMENTS = %w[ development production ].freeze
 

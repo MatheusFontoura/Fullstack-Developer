@@ -62,8 +62,6 @@ class UserTest < ActiveSupport::TestCase
     assert_equal users(:member), User.find_by(email: "ada@umanni.test")
   end
 
-  # Three routes could strip the last admin: the role toggle, the admin edit form and a
-  # user deleting their own profile. The rule is in the model so all three are covered.
   test "refuses to take the role from the last admin" do
     admin = only_admin
 

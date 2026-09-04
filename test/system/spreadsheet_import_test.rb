@@ -9,8 +9,6 @@ class SpreadsheetImportTest < ApplicationSystemTestCase
     attach_file "Spreadsheet", file_fixture("users.csv")
     click_on "Start import"
 
-    # The browser is on the progress page before the job runs, which is the whole
-    # point: what follows arrives over the wire, not from a page load.
     assert_text "Pending"
     assert_selector "[role=progressbar][aria-valuenow='0']"
 
@@ -21,8 +19,6 @@ class SpreadsheetImportTest < ApplicationSystemTestCase
     assert_text "Completed"
     assert_selector "[role=progressbar][aria-valuenow='100']"
     assert_text "5 of 5 rows"
-    # aria and the drawn width are two different claims, and a CSP that blocks the
-    # inline width leaves the first one true while the bar lies.
     assert_equal 100, rendered_progress_percentage
   end
 

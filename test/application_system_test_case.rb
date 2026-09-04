@@ -6,9 +6,7 @@ class ApplicationSystemTestCase < ActionDispatch::SystemTestCase
 
   driven_by :selenium, using: :headless_chrome, screen_size: [ 1400, 1400 ]
 
-  # A blocked style or script does not fail a request, so a policy that breaks the
-  # interface still passes every assertion about the DOM. This turns any violation the
-  # browser reports into a failing test, in whichever test provoked it.
+  # A blocked style fails no request, so a broken policy still passes DOM assertions.
   teardown do
     violations = page.driver.browser.logs.get(:browser)
                      .map(&:message)
@@ -18,12 +16,9 @@ class ApplicationSystemTestCase < ActionDispatch::SystemTestCase
   end
 
   private
-    # Deliberately shadows the cookie-jar helper the generator provides: that one writes
-    # a cookie into a test request and a real browser never sees it.
-    #
-    # The assertion at the end is not decoration. `click_on` returns as soon as the click
-    # is dispatched, so without waiting for the redirect the next `visit` outruns the
-    # sign-in request and arrives as an anonymous visitor.
+    # Shadows the generator's cookie-jar helper, which a real browser never sees.
+    # `click_on` returns before the request lands, so the wait is not decoration: without
+    # it the next `visit` arrives as an anonymous visitor.
     def sign_in_as(user, password: "secret-password")
       visit new_session_path
       fill_in "Email", with: user.email

@@ -26,9 +26,6 @@ class Admin::Users::RolesControllerTest < ActionDispatch::IntegrationTest
     assert_match dom_id(users(:member)), response.body
   end
 
-  # An admin demoting themselves is how a system ends up with nobody able to
-  # administer it. Blocking that here is what keeps at least one admin around: any
-  # other admin they demote leaves the demoting admin still an admin.
   test "refuses to change the signed in admin's own role" do
     patch admin_user_role_path(users(:admin))
 

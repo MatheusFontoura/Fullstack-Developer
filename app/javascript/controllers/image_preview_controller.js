@@ -1,7 +1,6 @@
 import { Controller } from "@hotwired/stimulus"
 
-// Shows the picked image before it is uploaded. Nothing in Turbo covers this: it reads
-// a File the browser already has, with no request involved.
+// Shows the picked image before it is uploaded.
 export default class extends Controller {
   static targets = ["input", "preview", "current"]
 
@@ -9,7 +8,6 @@ export default class extends Controller {
     const [file] = this.inputTarget.files
     this.#releaseUrl()
 
-    // Picker cancelled after a previous choice: go back to what is actually stored.
     if (!file) return this.#showCurrent()
 
     this.url = URL.createObjectURL(file)
@@ -18,9 +16,8 @@ export default class extends Controller {
     this.currentTarget.hidden = true
   }
 
-  // An object URL pins the file until revoked, and Turbo restores cached pages rather
-  // than reloading them — so the preview is torn down here as well, or a restored page
-  // shows an <img> pointing at a URL that no longer resolves.
+  // Turbo restores cached pages, so a revoked object URL would come back as a broken
+  // image unless the preview is torn down here too.
   disconnect() {
     this.#releaseUrl()
     this.#showCurrent()

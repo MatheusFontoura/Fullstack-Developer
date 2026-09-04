@@ -18,9 +18,8 @@ services:
       - .:/rails
       - bundle:/usr/local/bundle
       - storage:/rails/storage
-      # tmp/ and log/ stay inside the container. Written through the bind mount they
-      # land on the host owned by root, which then blocks a local `bin/dev` from
-      # writing its own bootsnap cache. Use `docker compose logs` to read them.
+      # Through the bind mount these land on the host owned by root and block a local
+      # `bin/dev`. Read them with `docker compose logs`.
       - tmp:/rails/tmp
       - log:/rails/log
     environment:

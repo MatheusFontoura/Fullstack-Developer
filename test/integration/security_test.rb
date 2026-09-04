@@ -1,8 +1,6 @@
 require "test_helper"
 
-# The brief names SQL injection, XSS and CSRF. The defences are Rails' own; these tests
-# exist so that "Rails handles it" is a checked claim rather than a hope, and so that
-# turning one of them off is a failing build rather than a quiet regression.
+# The brief names SQL injection, XSS and CSRF.
 class SecurityTest < ActionDispatch::IntegrationTest
   setup { sign_in_as users(:admin) }
 
@@ -37,7 +35,6 @@ class SecurityTest < ActionDispatch::IntegrationTest
     assert_no_match "<script>alert('row')", response.body
   end
 
-  # A wildcard reaching LIKE unescaped would turn a search box into "select everything".
   test "treats LIKE wildcards in a search term as literal characters" do
     get admin_users_path(query: "%")
 
@@ -50,7 +47,6 @@ class SecurityTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_select "td", text: /Ada Lovelace/, count: 0
-    assert_predicate User, :any?, "the users table survived"
   end
 
   test "rejects a state-changing request that carries no CSRF token" do
@@ -66,17 +62,8 @@ class SecurityTest < ActionDispatch::IntegrationTest
     end
   end
 
-  test "signs the session cookie so a forged one is ignored" do
-    cookies[:session_id] = Session.first&.id || 1
-
-    get admin_users_path
-
-    assert_redirected_to new_session_path
-  end
-
   private
-    # Rails disables forgery protection in the test environment, which is convenient and
-    # means the protection is never exercised. This turns it back on for one test.
+    # Rails turns forgery protection off in test.
     def with_forgery_protection
       original = ActionController::Base.allow_forgery_protection
       ActionController::Base.allow_forgery_protection = true

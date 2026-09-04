@@ -18,8 +18,8 @@
 - `email` uses `encrypts :email, deterministic: true`, so the unique index compares ciphertext and `authenticate_by`
   works, but `LIKE` on email is impossible. Dev/test keys live in `config/environments/{development,test}.rb` on
   purpose; production takes them from credentials (Rails default, nothing set in `production.rb`).
-- At least one admin must always exist. The rule is a model validation plus a `before_destroy`, because three routes
-  can break it (role toggle, admin edit form, profile deletion) and a rule enforced in one of them is not enforced.
+- At least one admin must always exist. Model validation plus `before_destroy`, because three routes can break it:
+  role toggle, admin edit form, profile deletion.
 - `Admin::BaseController` runs `require_admin`; every admin controller inherits from it. Admin routes:
   `admin/dashboard` (live counters), `admin/users` (all but show), `admin/users/:user_id/role` (update),
   `admin/spreadsheet_imports` (index, new, create, show).
@@ -117,8 +117,7 @@
   without it runs everything, because avatars do not use variants.
 - `sign_in_as` in `test/test_helpers/session_test_helper.rb` writes a cookie into a test request and is for
   integration tests only; system tests use the browser-driven override in `ApplicationSystemTestCase`.
-- Turbo's debounce on `broadcasts_refreshes_to` restarts on every write, so a bulk job writing faster than the delay
-  broadcasts nothing until it stops. `SpreadsheetImportJob` wraps its loop in `User.suppressing_turbo_broadcasts` and
-  calls `Turbo::StreamsChannel.broadcast_refresh_to` on a fixed cadence instead.
+- Turbo's debounce on `broadcasts_refreshes_to` restarts on every write, so a bulk job broadcasts nothing until it
+  stops. `SpreadsheetImportJob` suppresses it and paces the refresh itself.
 - The cable adapter in test is `async`, not `test`, because system tests need real delivery. That rules out
   `assert_broadcasts` and turbo's own broadcast assertions; Minitest 6 also no longer ships `minitest/mock`.

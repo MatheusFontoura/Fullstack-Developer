@@ -1,6 +1,5 @@
 <tr id="<%= dom_id(user) %>" class="group hover:bg-slate-50">
-  <%# Sticky so the name stays visible while the row scrolls horizontally on a phone.
-      Without it you can see a role and a Delete button with no idea whose they are. %>
+  <%# Sticky, or a horizontally scrolled row shows actions with no name attached. %>
   <td class="sticky left-0 z-10 bg-white px-4 py-3 group-hover:bg-slate-50">
     <div class="flex items-center gap-3">
       <%= render "shared/avatar", user: user %>

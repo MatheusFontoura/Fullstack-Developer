@@ -12,8 +12,6 @@
 <%= form_with url: admin_users_path, method: :get, class: "mt-6 flex flex-wrap items-end gap-3" do |form| %>
   <div class="min-w-56 flex-1">
     <%= form.label :query, "Search by name", class: "field-label" %>
-    <%# Email is encrypted, so there is nothing to match against with LIKE. Searching
-        names is the honest capability; see README. %>
     <%= form.search_field :query, value: params[:query], placeholder: "Ada", class: "field-input" %>
   </div>
 

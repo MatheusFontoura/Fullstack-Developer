@@ -1,15 +1,10 @@
-# Demo data, and only ever demo data. The container entrypoint runs db:prepare, which
-# seeds a freshly created database — so without this guard a production deploy would
-# come up with a known email and a published password already in it.
-#
-# A real first admin belongs to the deploy, not to this file. The README shows the
-# one-liner for creating it.
+# The container entrypoint runs db:prepare, which seeds a database it just created —
+# so without this guard a production deploy comes up with a published password in it.
 unless Rails.env.local?
   puts "Skipping demo seeds outside development and test."
   exit
 end
 
-# Idempotent: running it twice leaves the same database.
 DEMO_USER_COUNT = 32
 PASSWORD = "secret-password".freeze
 
@@ -22,9 +17,7 @@ PASSWORD = "secret-password".freeze
   end
 end
 
-# Enough rows for sorting, filtering and the dashboard counters to be worth looking
-# at. Driven by the total rather than by a fixed loop count, so a second run is a
-# no-op instead of another thirty random people.
+# Driven by the total, so a second run is a no-op rather than thirty more people.
 while User.count < DEMO_USER_COUNT
   User.create!(
     full_name: Faker::Name.name,

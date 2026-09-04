@@ -61,13 +61,10 @@ class SpreadsheetImportJobTest < ActiveJob::TestCase
     assert_equal 2, digests.uniq.size
   end
 
-  # The reason this job is continuable: a worker restarting mid-file would otherwise
-  # replay rows it already imported, and every one of them would come back as a
-  # duplicate email. Resuming from the cursor is correctness, not a nicety.
+  # Without the cursor, a restarted worker replays imported rows as duplicate emails.
   test "resumes from its cursor rather than replaying imported rows" do
     import = build_import("users.csv")
     import.update!(status: :processing, total_rows: 5, processed_rows: 2)
-    # Stand-ins for the two rows the interrupted run had already imported.
     %w[ katherine dorothy ].each do |name|
       User.create!(
         full_name: name.capitalize, email: "#{name}@umanni.test",
@@ -75,20 +72,16 @@ class SpreadsheetImportJobTest < ActiveJob::TestCase
       )
     end
 
-    # Picks up as if the worker had died after the second row.
     assert_difference -> { User.count }, 1 do
       perform_resumed(import, completed: %w[ prepare ], current: [ "import_rows", 2 ])
     end
 
     assert_predicate import.reload, :completed?
     assert_not_nil User.find_by(email: "mary@umanni.test"), "the row at the cursor was skipped"
-    # Replaying the first two rows would have produced duplicate-email failures.
     assert_equal 2, import.failed_rows
   end
 
-  # Uniqueness is validated and then inserted, so another writer can slip in between.
-  # RecordNotUnique is not RecordInvalid, and before this it escaped the row handler and
-  # killed the whole run.
+  # RecordNotUnique is not RecordInvalid, and used to escape the row handler.
   test "treats a row lost to a uniqueness race as rejected, not fatal" do
     import = build_import("users.csv")
     raced = false
@@ -133,17 +126,13 @@ class SpreadsheetImportJobTest < ActiveJob::TestCase
 
     SpreadsheetImportJob.perform_now(import)
 
-    # Silently demoting "Admin" to a plain user, and counting the row as a success,
-    # is the kind of thing nobody notices until an admin cannot sign in.
     assert_predicate User.find_by(email: "katherine@umanni.test"), :admin?
     assert_equal 0, import.reload.failed_rows
   ensure
     path&.delete
   end
 
-  # The bug this guards: User's dashboard refresh is debounced, and the debounce
-  # restarts on every write. A run creating rows faster than the delay produced no
-  # refresh at all until it finished — no live counter, in the one case that needed it.
+  # Guards the debounce bug: see SpreadsheetImportJob#import_rows.
   test "refreshes the dashboard while a long import runs, not only at the end" do
     import = build_import("bulk_users.csv")
 
@@ -153,9 +142,8 @@ class SpreadsheetImportJobTest < ActiveJob::TestCase
   end
 
   private
-    # Counted by hand rather than with a mocking library: Minitest 6 dropped
-    # minitest/mock, and turbo's own assertion helper needs the :test cable adapter,
-    # which this suite deliberately does not use — system tests need real delivery.
+    # By hand: Minitest 6 dropped minitest/mock, and turbo's helper needs the :test
+    # cable adapter, which this suite does not use.
     def count_dashboard_refreshes
       count = 0
       original = Turbo::StreamsChannel.method(:broadcast_refresh_to)

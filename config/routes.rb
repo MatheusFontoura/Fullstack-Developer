@@ -11,15 +11,12 @@ Rails.application.routes.draw do
     resources :spreadsheet_imports, only: %i[ index new create show ]
 
     resources :users, except: :show do
-      # The role is a sub-resource rather than a custom action on the user, so that
-      # UsersController stays plain CRUD and the "an admin cannot demote themselves"
-      # rule has one obvious home.
+      # A sub-resource, so UsersController stays plain CRUD.
       resource :role, only: :update, module: :users
     end
   end
 
-  # Returns 200 once the application boots cleanly. Used by the Compose healthcheck
-  # and by Kamal to decide when a container is ready to take traffic.
+  # Used by the Compose healthcheck and by Kamal.
   get "up" => "rails/health#show", as: :rails_health_check
 
   root "home#show"

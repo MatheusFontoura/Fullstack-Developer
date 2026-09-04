@@ -1,4 +1,3 @@
-<%# Renders its own wrapper id so a Turbo Stream can replace this block by name. %>
 <% messages = local_assigns.fetch(:messages, flash) %>
 
 <div id="flash" class="<%= "mb-6 space-y-3" if messages.any? %>">

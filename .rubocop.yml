@@ -1,7 +1,5 @@
-# Omakase is the baseline Rails 8 ships with. Everything below is a deliberate
-# addition on top of it: the framework cops omakase leaves out, the performance
-# and Minitest plugins, and complexity ceilings that force extraction instead of
-# letting a controller action quietly grow to forty lines.
+# Omakase plus the framework cops it leaves out, the Performance and Minitest
+# plugins, and complexity ceilings.
 inherit_gem:
   rubocop-rails-omakase: rubocop.yml
 
@@ -51,8 +49,7 @@ Layout/LineLength:
   Exclude:
     - db/migrate/**/*
 
-# Omakase stays quiet about naming and dead code; on a codebase meant to be
-# maintained by more than one person, both are worth failing CI over.
+# Omakase stays quiet about naming and dead code.
 Lint/UselessAssignment:
   Enabled: true
 Naming/PredicateMethod:
