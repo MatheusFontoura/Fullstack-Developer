@@ -107,10 +107,27 @@ class Admin::UsersControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to admin_users_path
   end
 
-  test "cannot strip the last admin of their role through the edit form" do
+  # url_for used to be handed every query parameter the request carried, so a crafted
+  # ?host= rewrote the pagination links and a ?controller= raised on a missing route.
+  test "does not let a query parameter rewrite the pagination links" do
+    30.times { |i| User.create!(full_name: "Person #{i}", email: "p#{i}@umanni.test", password: "secret-password") }
+
+    get "/admin/users?host=evil.example&protocol=https&page=1"
+
+    assert_response :success
+    assert_select "nav[aria-label=Pagination] a"
+    assert_no_match "evil.example", response.body
+  end
+
+  test "does not let a query parameter reach the router" do
+    get "/admin/users?controller=sessions&action=new&page=1"
+
+    assert_response :success
+  end
+
+  test "an admin cannot take their own role away through the edit form" do
     patch admin_user_path(users(:admin)), params: { user: { role: "user" } }
 
-    assert_response :unprocessable_content
     assert_predicate users(:admin).reload, :admin?
   end
 

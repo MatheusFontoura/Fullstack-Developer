@@ -86,6 +86,32 @@ class SpreadsheetImportJobTest < ActiveJob::TestCase
     assert_equal 2, import.failed_rows
   end
 
+  # Uniqueness is validated and then inserted, so another writer can slip in between.
+  # RecordNotUnique is not RecordInvalid, and before this it escaped the row handler and
+  # killed the whole run.
+  test "treats a row lost to a uniqueness race as rejected, not fatal" do
+    import = build_import("users.csv")
+    raced = false
+    racer = lambda do |user|
+      next if raced || user.email != "dorothy@umanni.test"
+
+      raced = true
+      User.create!(full_name: "Race Winner", email: user.email,
+                   password: "secret-password", password_confirmation: "secret-password")
+    end
+    User.set_callback(:create, :before, racer)
+
+    SpreadsheetImportJob.perform_now(import)
+    import.reload
+
+    assert raced, "the race never happened, so this test proved nothing"
+    assert_predicate import, :completed?
+    assert_includes import.row_errors.map { |row| row["message"] }, "Email has already been taken"
+    assert_equal 5, import.processed_rows
+  ensure
+    User.skip_callback(:create, :before, racer)
+  end
+
   test "marks the import failed, records why, and re-raises when the file cannot be read" do
     import = build_import("not-an-image.txt", skip_validation: true)
 

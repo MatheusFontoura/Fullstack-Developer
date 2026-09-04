@@ -20,6 +20,13 @@ class SpreadsheetImport::RowReaderTest < ActiveSupport::TestCase
     assert_equal [ 2, 3, 4, 5, 6 ], lines
   end
 
+  # Excel adds these without being asked, and counting them makes every one a rejected
+  # row and the progress bar wrong.
+  test "ignores the empty rows a spreadsheet editor leaves at the end" do
+    assert_equal 1, reader("trailing_blank_rows.csv", :csv).row_count
+    assert_equal [ 2 ], rows_with_lines("trailing_blank_rows.csv", :csv).map(&:last)
+  end
+
   test "normalises header casing and spacing" do
     path = Rails.root.join("tmp", "odd-headers-#{SecureRandom.hex(4)}.csv")
     path.write("Full Name, EMAIL ,Role\nAda Lovelace,ada@example.com,admin\n")
@@ -34,6 +41,10 @@ class SpreadsheetImport::RowReaderTest < ActiveSupport::TestCase
   private
     def reader(name, extension)
       SpreadsheetImport::RowReader.new(file_fixture(name), extension: extension)
+    end
+
+    def rows_with_lines(name, extension)
+      [].tap { |rows| reader(name, extension).each_row { |attributes, line| rows << [ attributes, line ] } }
     end
 
     def rows_from(name, extension)
