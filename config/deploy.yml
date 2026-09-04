@@ -38,7 +38,8 @@ env:
     # today — both would share the storage volume — but buys little at this size.
     SOLID_QUEUE_IN_PUMA: true
     JOB_CONCURRENCY: 2
-    WEB_CONCURRENCY: 2
+    # Read by config/puma.rb, and by Action Mailer for the links in a password reset.
+    APP_HOST: umanni.example.com
 
 aliases:
   console: app exec --interactive --reuse "bin/rails console"

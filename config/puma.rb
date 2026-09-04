@@ -40,3 +40,7 @@ plugin :solid_queue if ENV["SOLID_QUEUE_IN_PUMA"]
 # Specify the PID file. Defaults to tmp/pids/server.pid in development.
 # In other environments, only set the PID file if requested.
 pidfile ENV["PIDFILE"] if ENV["PIDFILE"]
+
+# Puma reads WEB_CONCURRENCY only if asked to. Left at one process by default because
+# Solid Queue runs inside this one, and every worker would start its own supervisor.
+workers ENV.fetch("WEB_CONCURRENCY") { 0 }.to_i

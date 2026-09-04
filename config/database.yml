@@ -44,6 +44,10 @@ development:
 test:
   <<: *default
   database: storage/test.sqlite3
+  # One process per core all loading their own schema at once will contend for the
+  # write lock. Five seconds is enough at four cores and not at twelve, and the failure
+  # is SQLite3::BusyException in a random worker rather than anything to do with a test.
+  timeout: 30000
 
 production:
   primary:

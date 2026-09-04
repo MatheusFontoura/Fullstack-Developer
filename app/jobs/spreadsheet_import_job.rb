@@ -9,6 +9,14 @@ class SpreadsheetImportJob < ApplicationJob
   # The dashboard is a coarser view than the bar, so it is refreshed less often.
   DASHBOARD_EVERY = 50
 
+  # A worker killed outright raises nothing in-process, so the rescue below never runs
+  # and the import would sit at "processing" for good. Retrying is safe precisely
+  # because the continuation resumes from its cursor instead of replaying the file.
+  retry_on SolidQueue::Processes::ProcessExitError,
+           SolidQueue::Processes::ProcessPrunedError,
+           SolidQueue::Processes::ThreadTerminatedError,
+           wait: 5.seconds, attempts: 3
+
   def perform(spreadsheet_import)
     @import = spreadsheet_import
 
@@ -105,9 +113,9 @@ class SpreadsheetImportJob < ApplicationJob
       persist
     end
 
-    # Counters are incremented per row because they are cheap and the bar reads them.
-    # The error list is written in batches, so a file of bad rows does not rewrite a
-    # growing JSON column once per line.
+    # Counters move per row because they are cheap and the bar reads them. Rejections
+    # write immediately, which costs a rewrite of the JSON column per bad row — the
+    # trade for not losing the reason when a worker is interrupted mid-batch.
     def persist(status: nil)
       @import.reload
       @import.update!({ row_errors: @row_errors || @import.row_errors, status: status }.compact)

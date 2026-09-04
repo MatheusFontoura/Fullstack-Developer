@@ -7,19 +7,29 @@ export default class extends Controller {
 
   show() {
     const [file] = this.inputTarget.files
-    if (!file) return
-
     this.#releaseUrl()
+
+    // Picker cancelled after a previous choice: go back to what is actually stored.
+    if (!file) return this.#showCurrent()
+
     this.url = URL.createObjectURL(file)
     this.previewTarget.src = this.url
     this.previewTarget.hidden = false
     this.currentTarget.hidden = true
   }
 
-  // An object URL pins the file in memory until it is revoked, and Turbo caches pages
-  // rather than reloading them, so without this the leak survives navigation.
+  // An object URL pins the file until revoked, and Turbo restores cached pages rather
+  // than reloading them — so the preview is torn down here as well, or a restored page
+  // shows an <img> pointing at a URL that no longer resolves.
   disconnect() {
     this.#releaseUrl()
+    this.#showCurrent()
+  }
+
+  #showCurrent() {
+    this.previewTarget.hidden = true
+    this.previewTarget.removeAttribute("src")
+    this.currentTarget.hidden = false
   }
 
   #releaseUrl() {
