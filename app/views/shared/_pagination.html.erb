@@ -1,8 +1,7 @@
 <% if page.previous? || page.next? %>
   <nav class="mt-6 flex items-center justify-between" aria-label="Pagination">
     <% if page.previous? %>
-      <%= link_to "← Previous", url_for(request.query_parameters.merge(page: page.number - 1)),
-            class: "btn-secondary" %>
+      <%= link_to "← Previous", url_for(filters.merge(page: page.number - 1)), class: "btn-secondary" %>
     <% else %>
       <span></span>
     <% end %>
@@ -10,8 +9,7 @@
     <span class="text-sm text-slate-500">Page <%= page.number %></span>
 
     <% if page.next? %>
-      <%= link_to "Next →", url_for(request.query_parameters.merge(page: page.number + 1)),
-            class: "btn-secondary" %>
+      <%= link_to "Next →", url_for(filters.merge(page: page.number + 1)), class: "btn-secondary" %>
     <% else %>
       <span></span>
     <% end %>
