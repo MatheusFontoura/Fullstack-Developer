@@ -17,6 +17,10 @@ Rails.application.configure do
     policy.object_src   :none
     policy.script_src   :self
     policy.style_src    :self
+    # Style *attributes* only, which is what a computed width like the import progress
+    # bar is. Nonces and hashes do not apply to attributes, and script-src — where XSS
+    # actually lives — stays closed.
+    policy.style_src_attr :unsafe_inline
   end
 
   # The import map is an inline <script>, so it needs a nonce to be allowed at all.
@@ -24,5 +28,7 @@ Rails.application.configure do
   # session yet would otherwise get an empty nonce, which matches nothing and blocks
   # the very script tag this exists to permit.
   config.content_security_policy_nonce_generator = ->(_request) { SecureRandom.base64(16) }
-  config.content_security_policy_nonce_directives = %w[ script-src ]
+  # style-src as well as script-src: Turbo injects a <style> element for its navigation
+  # progress bar and stamps it with the page nonce.
+  config.content_security_policy_nonce_directives = %w[ script-src style-src ]
 end

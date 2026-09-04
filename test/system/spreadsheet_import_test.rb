@@ -21,6 +21,21 @@ class SpreadsheetImportTest < ApplicationSystemTestCase
     assert_text "Completed"
     assert_selector "[role=progressbar][aria-valuenow='100']"
     assert_text "5 of 5 rows"
+    # aria and the drawn width are two different claims, and a CSP that blocks the
+    # inline width leaves the first one true while the bar lies.
+    assert_equal 100, rendered_progress_percentage
+  end
+
+  test "draws the bar at the width it reports" do
+    import = users(:admin).spreadsheet_imports.create!(
+      file: { io: file_fixture("users.csv").open, filename: "users.csv" }
+    )
+    import.update!(status: :processing, total_rows: 10, processed_rows: 3)
+
+    visit admin_spreadsheet_import_path(import)
+
+    assert_selector "[role=progressbar][aria-valuenow='30']"
+    assert_equal 30, rendered_progress_percentage
   end
 
   test "reports the rows it could not import, by line and reason" do
@@ -64,4 +79,15 @@ class SpreadsheetImportTest < ApplicationSystemTestCase
     assert_text "users.xlsx"
     assert_text "3 imported, 2 rejected"
   end
+
+  private
+    def rendered_progress_percentage
+      page.evaluate_script(<<~JS).round
+        (() => {
+          const fill = document.querySelector("[role=progressbar] > div");
+          return fill.getBoundingClientRect().width /
+                 fill.parentElement.getBoundingClientRect().width * 100;
+        })()
+      JS
+    end
 end

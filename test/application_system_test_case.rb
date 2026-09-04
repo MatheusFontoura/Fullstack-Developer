@@ -6,6 +6,17 @@ class ApplicationSystemTestCase < ActionDispatch::SystemTestCase
 
   driven_by :selenium, using: :headless_chrome, screen_size: [ 1400, 1400 ]
 
+  # A blocked style or script does not fail a request, so a policy that breaks the
+  # interface still passes every assertion about the DOM. This turns any violation the
+  # browser reports into a failing test, in whichever test provoked it.
+  teardown do
+    violations = page.driver.browser.logs.get(:browser)
+                     .map(&:message)
+                     .grep(/Content Security Policy/)
+
+    assert_empty violations, "the page violated its own content security policy"
+  end
+
   private
     # Deliberately shadows the cookie-jar helper the generator provides: that one writes
     # a cookie into a test request and a real browser never sees it.
