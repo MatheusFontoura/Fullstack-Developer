@@ -38,7 +38,7 @@ class User < ApplicationRecord
   # deleting their own profile — and a rule enforced in one controller out of three is
   # not enforced.
   validate :last_admin_keeps_the_role, on: :update
-  before_destroy :last_admin_is_not_deletable
+  before_destroy :last_admin_is_not_deletable, prepend: true
 
   scope :ordered, -> { order(:full_name, :id) }
   # Deterministic encryption rules out a partial match on email but not an exact one,
@@ -57,6 +57,9 @@ class User < ApplicationRecord
   end
 
   private
+    # Reads then decides, which is a race on any database that lets two writers in at
+    # once. SQLite does not — the adapter opens with BEGIN IMMEDIATE, so the second
+    # save blocks before it validates. On PostgreSQL this would need a lock.
     def another_admin_exists?
       self.class.admin.where.not(id: id).exists?
     end

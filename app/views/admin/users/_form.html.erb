@@ -12,10 +12,12 @@
     <%= form.email_field :email, required: true, placeholder: "ada@company.com", class: "field-input" %>
   </div>
 
-  <div>
-    <%= form.label :role, class: "field-label" %>
-    <%= form.select :role, User.roles.keys.map { |role| [ role.capitalize, role ] }, {}, class: "field-input" %>
-  </div>
+  <% unless user == Current.user %>
+    <div>
+      <%= form.label :role, class: "field-label" %>
+      <%= form.select :role, User.roles.keys.map { |role| [ role.capitalize, role ] }, {}, class: "field-input" %>
+    </div>
+  <% end %>
 
   <div>
     <%= form.label :avatar_image, "Avatar", class: "field-label" %>

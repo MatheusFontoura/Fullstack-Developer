@@ -9,7 +9,10 @@ module Admin
                              alert: "You cannot change your own role. Ask another admin."
         end
 
-        @user.update!(role: @user.admin? ? :user : :admin)
+        unless @user.update(role: @user.admin? ? :user : :admin)
+          return redirect_to admin_users_path, alert: @user.errors.full_messages.to_sentence
+        end
+
         message = "#{@user.full_name} is now #{@user.admin? ? "an admin" : "a user"}."
 
         respond_to do |format|
