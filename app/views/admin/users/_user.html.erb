@@ -1,0 +1,40 @@
+<tr id="<%= dom_id(user) %>" class="group hover:bg-slate-50">
+  <%# Sticky, or a horizontally scrolled row shows actions with no name attached. %>
+  <td class="sticky left-0 z-10 bg-white px-4 py-3 group-hover:bg-slate-50">
+    <div class="flex items-center gap-3">
+      <%= render "shared/avatar", user: user %>
+      <div class="min-w-0">
+        <p class="truncate font-medium text-slate-900"><%= user.full_name %></p>
+        <p class="truncate text-sm text-slate-500"><%= user.email %></p>
+      </div>
+    </div>
+  </td>
+
+  <td class="px-4 py-3 whitespace-nowrap">
+    <span class="<%= user.admin? ? "badge-admin" : "badge-user" %>"><%= user.role.capitalize %></span>
+  </td>
+
+  <td class="hidden px-4 py-3 text-sm whitespace-nowrap text-slate-500 sm:table-cell">
+    <%= user.created_at.to_date.to_fs(:long) %>
+  </td>
+
+  <td class="px-4 py-3">
+    <div class="flex items-center justify-end gap-2">
+      <% if user == Current.user %>
+        <span class="text-xs text-slate-400">You</span>
+      <% else %>
+        <%= button_to admin_user_role_path(user), method: :patch, class: "btn-secondary text-xs" do %>
+          Make <%= user.admin? ? "user" : "admin" %>
+        <% end %>
+      <% end %>
+
+      <%= link_to "Edit", edit_admin_user_path(user), class: "btn-secondary text-xs" %>
+
+      <% unless user == Current.user %>
+        <%= button_to "Delete", admin_user_path(user), method: :delete,
+              class: "btn-danger text-xs",
+              form: { data: { turbo_confirm: "Delete #{user.full_name}? This cannot be undone." } } %>
+      <% end %>
+    </div>
+  </td>
+</tr>
