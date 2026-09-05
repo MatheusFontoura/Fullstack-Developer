@@ -15,6 +15,10 @@ class ApplicationController < ActionController::Base
       session.delete(:return_to_after_authenticating) || home_url_for(Current.user)
     end
 
+    def uploaded_file
+      ActionDispatch::Http::UploadedFile
+    end
+
     def home_url_for(user)
       user.admin? ? admin_dashboard_url : profile_url
     end
@@ -26,7 +30,9 @@ class ApplicationController < ActionController::Base
     # silently — which is why this is not a blanket compact_blank.
     def without_untouched_fields(permitted)
       permitted = permitted.except(:password, :password_confirmation) if permitted[:password].blank?
-      permitted = permitted.except(:avatar_image) if permitted[:avatar_image].blank?
+      # Anything that is not an upload — a blank input, or a string a client invented —
+      # is dropped: Active Storage reads a string as a signed id and raises on it.
+      permitted = permitted.except(:avatar_image) unless permitted[:avatar_image].is_a?(uploaded_file)
       permitted
     end
 end

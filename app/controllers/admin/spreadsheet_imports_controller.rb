@@ -30,7 +30,8 @@ module Admin
       end
 
       def spreadsheet_import_params
-        params.expect(spreadsheet_import: [ :file ])
+        permitted = params.expect(spreadsheet_import: [ :file ])
+        permitted[:file].is_a?(ActionDispatch::Http::UploadedFile) ? permitted : permitted.except(:file)
       end
   end
 end

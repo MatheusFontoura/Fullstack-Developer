@@ -5,12 +5,14 @@
 # links or a total count would be the point to bring in Pagy and stop hand-rolling.
 class Pagination
   PER_PAGE = 25
+  # An OFFSET beyond this is a malformed request, not a page someone wants.
+  LAST_PAGE = 1_000_000
 
   attr_reader :number
 
   def initialize(scope, page:, per_page: PER_PAGE)
     @scope = scope
-    @number = [ page.to_i, 1 ].max
+    @number = Integer(page.to_s, exception: false)&.clamp(1, LAST_PAGE) || 1
     @per_page = per_page
   end
 
