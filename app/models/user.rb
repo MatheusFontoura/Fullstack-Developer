@@ -96,7 +96,10 @@ class User < ApplicationRecord
       io = avatar_upload_io
       return avatar_image.content_type unless io
 
-      Marcel::MimeType.for(io.tap { |stream| stream.rewind if stream.respond_to?(:rewind) })
+      Marcel::MimeType.for(io)
+    ensure
+      # Sniffing leaves the stream at EOF, and it belongs to whoever handed it over.
+      io.rewind if io.respond_to?(:rewind)
     end
 
     def avatar_upload_io

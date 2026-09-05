@@ -86,6 +86,38 @@ class UserTest < ActiveSupport::TestCase
     assert users(:admin).update(role: :user)
   end
 
+  # Marcel trusts the extension when that is all it is given, so the name is not enough.
+  test "rejects a file that only claims to be an image" do
+    user = build
+    user.avatar_image.attach(
+      io: file_fixture("not-really-a-png.png").open, filename: "fake.png", content_type: "image/png"
+    )
+
+    assert_predicate user, :invalid?
+    assert_includes user.errors[:avatar_image], "must be a PNG, JPEG or WebP image"
+  end
+
+  test "rejects an empty file" do
+    user = build
+    user.avatar_image.attach(
+      io: file_fixture("empty.png").open, filename: "empty.png", content_type: "image/png"
+    )
+
+    assert_predicate user, :invalid?
+    assert_includes user.errors[:avatar_image], "is empty"
+  end
+
+  test "stores the avatar whole" do
+    user = build
+    user.avatar_image.attach(io: file_fixture("avatar.png").open, filename: "avatar.png")
+    user.save!
+
+    # Reading the upload to sniff its type must not leave the stream at EOF, or Active
+    # Storage writes what is left of it.
+    assert_equal file_fixture("avatar.png").size, user.reload.avatar_image.byte_size
+    assert_equal file_fixture("avatar.png").binread, user.avatar_image.download
+  end
+
   test "destroys its sessions when destroyed" do
     user = users(:member)
     user.sessions.create!
