@@ -25,17 +25,14 @@ class ProfilesController < ApplicationController
   end
 
   private
-    # Always the signed-in user. There is no id in the route, so there is nothing to
-    # tamper with: a user cannot ask for someone else's profile by changing a number.
+    # No id in the route, so there is nothing to tamper with.
     def set_profile
       @user = Current.user
     end
 
-    # :role is absent, as it is everywhere outside the admin namespace. A user editing
-    # their own profile cannot promote themselves.
     def profile_params
       without_untouched_fields params.expect(
-        user: [ :full_name, :email, :password, :password_confirmation, :avatar_image ]
+        user: [ :full_name, :email, :password, :password_confirmation, :avatar_image, :remove_avatar_image ]
       )
     end
 end

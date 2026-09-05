@@ -61,6 +61,30 @@ class ProfilesControllerTest < ActionDispatch::IntegrationTest
     assert_equal "ada@umanni.test", users(:member).reload.email
   end
 
+  test "removes an attached avatar when asked" do
+    users(:member).avatar_image.attach(io: file_fixture("avatar.png").open, filename: "avatar.png")
+
+    patch profile_path, params: { user: { remove_avatar_image: "1" } }
+
+    assert_not users(:member).reload.avatar_image.attached?
+  end
+
+  test "keeps the avatar when the box is not ticked" do
+    users(:member).avatar_image.attach(io: file_fixture("avatar.png").open, filename: "avatar.png")
+
+    patch profile_path, params: { user: { full_name: "Ada King", remove_avatar_image: "0" } }
+
+    assert_predicate users(:member).reload.avatar_image, :attached?
+  end
+
+  test "names the field an invalid value came from" do
+    patch profile_path, params: { user: { email: "not-an-email" } }
+
+    assert_response :unprocessable_content
+    assert_select "p#email_error"
+    assert_select "input[name=?][aria-invalid=true]", "user[email]"
+  end
+
   test "attaches an avatar" do
     patch profile_path, params: { user: { avatar_image: fixture_file_upload("avatar.png", "image/png") } }
 

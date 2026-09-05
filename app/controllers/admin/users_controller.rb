@@ -3,9 +3,7 @@ module Admin
     before_action :set_user, only: %i[ edit update destroy ]
 
     def index
-      # Only these reach a link or a query. Passing request.query_parameters straight to
-      # url_for lets a crafted ?host= rewrite the pagination links, and a ?controller=
-      # raise on a route that does not exist.
+      # request.query_parameters here would let ?host= rewrite the links.
       @filters = params.permit(:query, :role, :page).to_h.compact_blank.except("page")
       @page = Pagination.new(filtered_users.ordered, page: params[:page])
     end
@@ -49,13 +47,10 @@ module Admin
         @user = User.find(params[:id])
       end
 
-      # Role is permitted here and nowhere else: an admin assigns roles, a visitor
-      # registering themselves does not. Not even here for yourself, though — the role
-      # toggle already refuses that, and a rule enforced on one of two routes is not a
-      # rule.
+      # The only place :role is permitted, and not for yourself.
       def user_params
         permitted = without_untouched_fields params.expect(
-          user: [ :full_name, :email, :role, :password, :password_confirmation, :avatar_image ]
+          user: [ :full_name, :email, :role, :password, :password_confirmation, :avatar_image, :remove_avatar_image ]
         )
         @user == Current.user ? permitted.except(:role) : permitted
       end

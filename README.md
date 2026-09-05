@@ -127,7 +127,7 @@ the same time.
 ## Testing
 
 ```bash
-bin/rails test:all      # unit, integration and system — 140 tests
+bin/rails test:all      # unit, integration and system — 143 tests
 bin/rails test          # skips system tests
 bin/ci                  # the whole pipeline: lint, audits, Brakeman, tests, seeds
 ```
@@ -135,13 +135,13 @@ bin/ci                  # the whole pipeline: lint, audits, Brakeman, tests, see
 | Layer | Files | Tests |
 |---|---|---|
 | Models and POROs | 3 | 24 |
-| Controllers | 8 | 70 |
+| Controllers | 8 | 73 |
 | Integration (incl. security) | 2 | 11 |
 | Jobs | 1 | 10 |
 | System (real Chrome) | 5 | 22 |
 | Configuration | 1 | 3 |
 
-**140 tests, 507 assertions, 98.93% line coverage, 93.90% branch coverage.** Tests run
+**143 tests, 515 assertions, 98.96% line coverage, 94.31% branch coverage.** Tests run
 in parallel across one process per core, and SimpleCov results are merged per worker —
 without that merge the report shows roughly one worker's share and every number after it
 is fiction. The 90% floor is enforced under `CI` or `COVERAGE`.
@@ -301,8 +301,8 @@ Form feedback works in three layers. `required`, `type="email"`, `minlength` and
 JavaScript. The server-side rules are the ones that decide, and the system tests check
 both: one asserts the browser blocks a short password before any request, and the
 server-side test uses a duplicate email, because that is the case the browser cannot
-catch. Errors render in a summary at the top of the form rather than beside each field —
-per-field messaging is the obvious next step and is not here.
+catch. Server-side errors render both as a summary and beside the field that caused
+them, with `aria-invalid` and `aria-describedby` so a screen reader gets the pairing.
 
 Layout is Tailwind, mobile-first. The users table scrolls inside its own container on a
 phone with the name column pinned, so the row still says whose it is.
@@ -371,11 +371,6 @@ Reproduce it with `script/jit_benchmark.rb`; the numbers above are from one mach
   while the third was guarded, which is what moved the rule from the controller into the
   model. A user who is not the last admin can still delete their own account, as the
   brief asks.
-- **No "remove avatar" control.** The brief does not ask for one, and a checkbox that
-  purges an attachment is scope I did not take. It is the gap I would close first: once
-  an avatar is uploaded there is no way to take it back through the interface.
-- **Validation errors appear in a summary, not per field.** Adequate on forms this short,
-  and the wrong answer on a longer one.
 - **Imported users cannot sign in until they reset their password.** They are created
   with a random one, and production has no SMTP configured, so that reset is documented
   rather than working. Wiring a real mail service is the first thing a deploy needs.

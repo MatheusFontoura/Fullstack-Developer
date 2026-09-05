@@ -19,8 +19,6 @@ class RegistrationsController < ApplicationController
   end
 
   private
-    # :role is absent by design. Self-registration always produces a plain user, and
-    # a crafted role parameter has to be ignored rather than merely unused.
     def registration_params
       params.expect(user: [ :full_name, :email, :password, :password_confirmation ])
     end

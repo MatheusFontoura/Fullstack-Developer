@@ -9,6 +9,7 @@ class User < ApplicationRecord
   has_many :sessions, dependent: :destroy
   has_many :spreadsheet_imports, dependent: :destroy
   has_one_attached :avatar_image
+  attr_accessor :remove_avatar_image
 
   # Deterministic so the column stays uniquely indexable and findable by exact value.
   # The cost is that LIKE on email is impossible; full_name stays in plaintext.
@@ -27,6 +28,8 @@ class User < ApplicationRecord
   validates :email, presence: true, uniqueness: true, format: { with: URI::MailTo::EMAIL_REGEXP }
   validates :password, length: { minimum: 8 }, allow_nil: true
   validate :avatar_image_must_be_a_supported_image
+
+  after_save :purge_avatar_image_if_requested
   # Enforced here because three routes can strip an admin: the role toggle, the admin
   # edit form, and a user deleting their own profile.
   validate :last_admin_keeps_the_role, on: :update
@@ -69,6 +72,10 @@ class User < ApplicationRecord
 
       errors.add(:base, "The only admin cannot be deleted.")
       throw :abort
+    end
+
+    def purge_avatar_image_if_requested
+      avatar_image.purge if remove_avatar_image == "1" && avatar_image.attached?
     end
 
     def avatar_image_must_be_a_supported_image

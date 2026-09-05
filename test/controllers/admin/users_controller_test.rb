@@ -107,8 +107,6 @@ class Admin::UsersControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to admin_users_path
   end
 
-  # url_for used to be handed every query parameter the request carried, so a crafted
-  # ?host= rewrote the pagination links and a ?controller= raised on a missing route.
   test "does not let a query parameter rewrite the pagination links" do
     30.times { |i| User.create!(full_name: "Person #{i}", email: "p#{i}@umanni.test", password: "secret-password") }
 

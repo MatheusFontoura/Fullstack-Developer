@@ -81,7 +81,6 @@ class SpreadsheetImportJobTest < ActiveJob::TestCase
     assert_equal 2, import.failed_rows
   end
 
-  # RecordNotUnique is not RecordInvalid, and used to escape the row handler.
   test "treats a row lost to a uniqueness race as rejected, not fatal" do
     import = build_import("users.csv")
     raced = false

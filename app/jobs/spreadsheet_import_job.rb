@@ -21,7 +21,7 @@ class SpreadsheetImportJob < ApplicationJob
       broadcast_progress
       broadcast_dashboard
     end
-  # Continuation::Interrupt is an Exception, not a StandardError. Do not widen this.
+  # Continuation::Interrupt is an Exception, so it passes through this rescue.
   rescue StandardError => error
     # The reason belongs on the record. Otherwise the admin sees a red badge and has to
     # be told to go read a jobs table to find out what went wrong.
