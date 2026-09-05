@@ -127,21 +127,21 @@ the same time.
 ## Testing
 
 ```bash
-bin/rails test:all      # unit, integration and system — 148 tests
+bin/rails test:all      # unit, integration and system — 151 tests
 bin/rails test          # skips system tests
 bin/ci                  # the whole pipeline: lint, audits, Brakeman, tests, seeds
 ```
 
 | Layer | Files | Tests |
 |---|---|---|
-| Models and POROs | 3 | 24 |
+| Models and POROs | 3 | 27 |
 | Controllers | 8 | 73 |
 | Integration (incl. security) | 2 | 15 |
 | Jobs | 1 | 11 |
 | System (real Chrome) | 5 | 22 |
 | Configuration | 1 | 3 |
 
-**148 tests, 513 assertions, 98.76% line coverage, 94.44% branch coverage.** Tests run
+**151 tests, 523 assertions, 98.76% line coverage, 96.29% branch coverage.** Tests run
 in parallel across one process per core, and SimpleCov results are merged per worker —
 without that merge the report shows roughly one worker's share and every number after it
 is fiction. The 90% floor is enforced under `CI` or `COVERAGE`.
