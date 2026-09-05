@@ -31,6 +31,15 @@ services:
       retries: 10
       start_period: 40s
 
+  # Catches password-reset mail so the link can be clicked in development.
+  # Start it with: docker compose --profile mail up
+  mail:
+    image: axllent/mailpit
+    profiles: [ mail ]
+    ports:
+      - "1025:1025"
+      - "${MAIL_UI_PORT:-8025}:8025"
+
 volumes:
   bundle:
   storage:

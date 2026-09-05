@@ -62,14 +62,19 @@ Rails.application.configure do
   # user ever signs in, so a placeholder here is a broken feature, not a stub.
   config.action_mailer.default_url_options = { host: ENV.fetch("APP_HOST", "example.com"), protocol: "https" }
 
-  # Specify outgoing SMTP server. Remember to add smtp/* credentials via bin/rails credentials:edit.
-  # config.action_mailer.smtp_settings = {
-  #   user_name: Rails.application.credentials.dig(:smtp, :user_name),
-  #   password: Rails.application.credentials.dig(:smtp, :password),
-  #   address: "smtp.example.com",
-  #   port: 587,
-  #   authentication: :plain
-  # }
+  # A password reset is the only way an imported user ever signs in, so delivery has to
+  # be configured rather than left to a placeholder. Address and port come from the
+  # environment; the credentials come from the encrypted file.
+  config.action_mailer.delivery_method = :smtp
+  config.action_mailer.raise_delivery_errors = true
+  config.action_mailer.smtp_settings = {
+    address: ENV.fetch("SMTP_ADDRESS", "localhost"),
+    port: Integer(ENV.fetch("SMTP_PORT", 587)),
+    user_name: Rails.application.credentials.dig(:smtp, :user_name),
+    password: Rails.application.credentials.dig(:smtp, :password),
+    authentication: ENV["SMTP_ADDRESS"] ? :plain : nil,
+    enable_starttls_auto: ENV["SMTP_ADDRESS"].present?
+  }.compact
 
   # Enable locale fallbacks for I18n (makes lookups for any locale fall back to
   # the I18n.default_locale when a translation cannot be found).

@@ -326,7 +326,10 @@ docker run -d -p 80:80 \
 image serves fine and imports never run. Kamal sets it in `config/deploy.yml`.
 
 `config/deploy.yml` is a complete Kamal 2 configuration: fill in the registry, image
-owner, server and host, and `bin/kamal setup` is the deploy. TLS terminates at
+owner, server and host, and `bin/kamal setup` is the deploy. `kamal config` resolves the
+whole file — roles, image, volume, ssh, builder — and `kamal secrets print` resolves the
+master key. **A deploy against a real host was not exercised**; there was no server to
+deploy to. TLS terminates at
 kamal-proxy, so `assume_ssl` and `force_ssl` are on in production.
 
 Solid Queue runs inside Puma rather than as a separate job role, and that follows from
@@ -382,15 +385,18 @@ Reproduce it with `script/jit_benchmark.rb`; the numbers above are from one mach
   model. A user who is not the last admin can still delete their own account, as the
   brief asks.
 - **Imported users cannot sign in until they reset their password.** They are created
-  with a random one, and production has no SMTP configured, so that reset is documented
-  rather than working. Wiring a real mail service is the first thing a deploy needs.
+  with a random one and set a real one through the reset flow. Delivery is configured
+  (`SMTP_ADDRESS`, `SMTP_PORT`, credentials under `smtp:`), and the flow was exercised
+  end to end against a local catcher — mail sent, link opened, password changed, old
+  password rejected. A deploy still has to point it at a real mail service.
 - **A worker killed outright leaves its import showing "processing".** Solid Queue records
   the failure but never re-enters the job, so `retry_on` does not apply; and a manual
   retry restarts the file from the top, reporting already-imported rows as duplicates.
   Recovering properly means storing the job id and reconciling against
   `solid_queue_failed_executions`, which is more machinery than this size of import earns.
-- **No email delivery is configured in development**, so password-reset mail fails
-  silently. Previews are at `/rails/mailers`.
+- **Development delivers mail to a local catcher.** `docker compose --profile mail up`
+  starts Mailpit; the reset link is then clickable at <http://localhost:8025>. Without
+  it, delivery fails quietly. Previews are at `/rails/mailers`.
 - **Counters in the import are written per row.** At a genuinely large file they would
   batch alongside the error list; at this size the extra write buys a bar that moves.
 - **No background job for avatar processing**, no CDN, no fragment caching. All three

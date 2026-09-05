@@ -33,6 +33,9 @@ env:
     JOB_CONCURRENCY: 2
     # Read by config/puma.rb, and by Action Mailer for the links in a password reset.
     APP_HOST: umanni.example.com
+    SMTP_ADDRESS: smtp.example.com
+    SMTP_PORT: 587
+    MAIL_FROM: no-reply@umanni.example.com
 
 aliases:
   console: app exec --interactive --reuse "bin/rails console"
