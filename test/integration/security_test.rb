@@ -52,15 +52,18 @@ class SecurityTest < ActionDispatch::IntegrationTest
   # Every one of these returned 500 before. A malformed request is a 4xx.
   test "answers a half-filled login without raising" do
     post session_path, params: { session: { email: users(:member).email } }
+
     assert_response :unprocessable_content
 
     post session_path, params: { session: { password: "secret-password" } }
+
     assert_response :unprocessable_content
   end
 
   test "survives a page parameter that is not a number" do
     [ "page[]=1", "page[a]=1", "page=abc", "page=-1", "page=99999999999999999999" ].each do |query|
       get "/admin/users?#{query}"
+
       assert_response :success, "GET /admin/users?#{query}"
     end
   end
