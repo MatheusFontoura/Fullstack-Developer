@@ -49,6 +49,40 @@ class SecurityTest < ActionDispatch::IntegrationTest
     assert_select "td", text: /Ada Lovelace/, count: 0
   end
 
+  # Every one of these returned 500 before. A malformed request is a 4xx.
+  test "answers a half-filled login without raising" do
+    post session_path, params: { session: { email: users(:member).email } }
+
+    assert_response :unprocessable_content
+
+    post session_path, params: { session: { password: "secret-password" } }
+
+    assert_response :unprocessable_content
+  end
+
+  test "survives a page parameter that is not a number" do
+    [ "page[]=1", "page[a]=1", "page=abc", "page=-1", "page=99999999999999999999" ].each do |query|
+      get "/admin/users?#{query}"
+
+      assert_response :success, "GET /admin/users?#{query}"
+    end
+  end
+
+  test "ignores an avatar that is a string instead of an upload" do
+    patch profile_path, params: { user: { avatar_image: "https://example.com/a.png" } }
+
+    assert_response :redirect
+    assert_not users(:admin).reload.avatar_image.attached?
+  end
+
+  test "ignores a spreadsheet that is a string instead of an upload" do
+    assert_no_difference -> { SpreadsheetImport.count } do
+      post admin_spreadsheet_imports_path, params: { spreadsheet_import: { file: "abc" } }
+    end
+
+    assert_response :unprocessable_content
+  end
+
   test "rejects a state-changing request that carries no CSRF token" do
     with_forgery_protection do
       assert_no_difference -> { User.count } do

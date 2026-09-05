@@ -7,7 +7,7 @@ class SessionsController < ApplicationController
   end
 
   def create
-    if (user = User.authenticate_by(credentials))
+    if (user = authenticate)
       start_new_session_for user
       redirect_to after_authentication_url
     else
@@ -24,7 +24,12 @@ class SessionsController < ApplicationController
   private
     # expect, not permit: a login attempt has exactly one shape, and anything else is
     # a malformed request rather than a wrong password.
-    def credentials
-      params.expect(session: [ :email, :password ])
+    # expect guarantees the envelope, not that the fields inside it are filled, and
+    # authenticate_by raises on a missing one. A half-filled form is a failed login.
+    def authenticate
+      credentials = params.expect(session: [ :email, :password ])
+      return if credentials[:email].blank? || credentials[:password].blank?
+
+      User.authenticate_by(credentials)
     end
 end

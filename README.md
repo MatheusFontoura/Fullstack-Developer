@@ -81,7 +81,7 @@ There is no database service to wait for. SQLite and the three Solid databases l
 the `storage` volume, which is the point of this stack.
 
 ```bash
-docker compose exec web bin/rails db:seed
+docker compose exec web bin/rails db:seed   # optional: `db:prepare` already seeded
 ```
 
 ### Local
@@ -127,7 +127,7 @@ the same time.
 ## Testing
 
 ```bash
-bin/rails test:all      # unit, integration and system — 143 tests
+bin/rails test:all      # unit, integration and system — 148 tests
 bin/rails test          # skips system tests
 bin/ci                  # the whole pipeline: lint, audits, Brakeman, tests, seeds
 ```
@@ -136,12 +136,12 @@ bin/ci                  # the whole pipeline: lint, audits, Brakeman, tests, see
 |---|---|---|
 | Models and POROs | 3 | 24 |
 | Controllers | 8 | 73 |
-| Integration (incl. security) | 2 | 11 |
-| Jobs | 1 | 10 |
+| Integration (incl. security) | 2 | 15 |
+| Jobs | 1 | 11 |
 | System (real Chrome) | 5 | 22 |
 | Configuration | 1 | 3 |
 
-**143 tests, 515 assertions, 98.96% line coverage, 94.31% branch coverage.** Tests run
+**148 tests, 513 assertions, 98.76% line coverage, 94.44% branch coverage.** Tests run
 in parallel across one process per core, and SimpleCov results are merged per worker —
 without that merge the report shows roughly one worker's share and every number after it
 is fiction. The 90% floor is enforced under `CI` or `COVERAGE`.
@@ -316,8 +316,14 @@ The production image is multi-stage, runs as a non-root user, and serves through
 
 ```bash
 docker build -t umanni .
-docker run -d -p 80:80 -e RAILS_MASTER_KEY=<key> -v umanni_storage:/rails/storage umanni
+docker run -d -p 80:80 \
+  -e RAILS_MASTER_KEY=<key> \
+  -e SOLID_QUEUE_IN_PUMA=true \
+  -v umanni_storage:/rails/storage umanni
 ```
+
+`SOLID_QUEUE_IN_PUMA` is what starts the job supervisor inside Puma; without it the
+image serves fine and imports never run. Kamal sets it in `config/deploy.yml`.
 
 `config/deploy.yml` is a complete Kamal 2 configuration: fill in the registry, image
 owner, server and host, and `bin/kamal setup` is the deploy. TLS terminates at
@@ -331,13 +337,17 @@ needs backing up.
 
 **Credentials.** `config/master.key` is not in this repository, which means the
 committed credentials cannot be read on another machine — as is true of any Rails
-repository. To run in production mode, generate your own:
+repository. Generate your own **before building the image**, or the build bakes in a
+file the new key cannot decrypt:
 
 ```bash
 rm config/credentials.yml.enc
-bin/rails db:encryption:init          # copy the three keys it prints
-bin/rails credentials:edit            # paste them under active_record_encryption:
+bin/rails db:encryption:init                        # copy the three keys it prints
+EDITOR="code --wait" bin/rails credentials:edit     # paste under active_record_encryption:
 ```
+
+`credentials:edit` needs an `EDITOR` that blocks until you close the file — `code --wait`,
+`vim`, or `nano`. Without one it exits without saving.
 
 Rails wires `active_record_encryption` from credentials on its own. Development and test
 keys are committed in the environment files on purpose — they are not secrets, and the
