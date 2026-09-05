@@ -81,10 +81,28 @@ class User < ApplicationRecord
     def avatar_image_must_be_a_supported_image
       return unless avatar_image.attached?
 
-      supported = avatar_image.content_type.in?(AVATAR_CONTENT_TYPES)
-      oversized = avatar_image.byte_size > AVATAR_MAX_SIZE
+      errors.add(:avatar_image, "is empty") if avatar_image.byte_size.zero?
+      if avatar_image.byte_size > AVATAR_MAX_SIZE
+        errors.add(:avatar_image, "must be under #{AVATAR_MAX_SIZE / 1.megabyte} MB")
+      end
+      return if uploaded_avatar_type.in?(AVATAR_CONTENT_TYPES)
 
-      errors.add(:avatar_image, "must be a PNG, JPEG or WebP image") unless supported
-      errors.add(:avatar_image, "must be under #{AVATAR_MAX_SIZE / 1.megabyte} MB") if oversized
+      errors.add(:avatar_image, "must be a PNG, JPEG or WebP image")
+    end
+
+    # Read from the bytes, not from the name. Marcel trusts the extension when that is
+    # all it is given, so a .txt renamed .png arrives declaring itself an image.
+    def uploaded_avatar_type
+      io = avatar_upload_io
+      return avatar_image.content_type unless io
+
+      Marcel::MimeType.for(io.tap { |stream| stream.rewind if stream.respond_to?(:rewind) })
+    end
+
+    def avatar_upload_io
+      attachable = attachment_changes["avatar_image"]&.attachable
+      return attachable[:io] if attachable.is_a?(Hash)
+
+      attachable if attachable.respond_to?(:read)
     end
 end
