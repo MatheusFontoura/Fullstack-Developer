@@ -23,7 +23,7 @@ AllCops:
 Metrics/AbcSize:
   Max: 17
 Metrics/BlockLength:
-  AllowedMethods: [ configure, describe, context, draw, included, class_methods ]
+  AllowedMethods: [ configure, draw, included, class_methods ]
   Max: 30
 Metrics/ClassLength:
   Max: 120
@@ -72,7 +72,7 @@ Rails/OutputSafety:
 Rails/SkipsModelValidations:
   Enabled: true
   # update_counters is how the import reports progress without loading each row.
-  AllowedMethods: [ touch, update_counters, insert_all, upsert_all ]
+  AllowedMethods: [ touch, update_counters ]
 Rails/UniqueValidationWithoutIndex:
   Enabled: true
 Rails/Validation:
