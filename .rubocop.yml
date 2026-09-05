@@ -1,7 +1,5 @@
-# Omakase is the baseline Rails 8 ships with. Everything below is a deliberate
-# addition on top of it: the framework cops omakase leaves out, the performance
-# and Minitest plugins, and complexity ceilings that force extraction instead of
-# letting a controller action quietly grow to forty lines.
+# Omakase plus the framework cops it leaves out, the Performance and Minitest
+# plugins, and complexity ceilings.
 inherit_gem:
   rubocop-rails-omakase: rubocop.yml
 
@@ -25,7 +23,7 @@ AllCops:
 Metrics/AbcSize:
   Max: 17
 Metrics/BlockLength:
-  AllowedMethods: [ configure, describe, context, draw, included, class_methods ]
+  AllowedMethods: [ configure, draw, included, class_methods ]
   Max: 30
 Metrics/ClassLength:
   Max: 120
@@ -51,8 +49,7 @@ Layout/LineLength:
   Exclude:
     - db/migrate/**/*
 
-# Omakase stays quiet about naming and dead code; on a codebase meant to be
-# maintained by more than one person, both are worth failing CI over.
+# Omakase stays quiet about naming and dead code.
 Lint/UselessAssignment:
   Enabled: true
 Naming/PredicateMethod:
@@ -75,7 +72,7 @@ Rails/OutputSafety:
 Rails/SkipsModelValidations:
   Enabled: true
   # update_counters is how the import reports progress without loading each row.
-  AllowedMethods: [ touch, update_counters, insert_all, upsert_all ]
+  AllowedMethods: [ touch, update_counters ]
 Rails/UniqueValidationWithoutIndex:
   Enabled: true
 Rails/Validation:

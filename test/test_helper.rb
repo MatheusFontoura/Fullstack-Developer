@@ -11,17 +11,13 @@ SimpleCov.start "rails" do
   skip "app/channels/application_cable"
   skip "config/"
 
-  group "Services", "app/services"
   group "Jobs", "app/jobs"
 
-  # Parallel workers each write their own resultset; merging is what turns them back
-  # into a single number instead of one worker's share.
+  # Without merging, the report shows one worker's share.
   merging true
   merge_timeout 600
 
-  # The brief asks for 90% line coverage. Branch coverage is measured and reported
-  # but not enforced: failing a submission on a self-imposed threshold is a
-  # self-inflicted red build.
+  # The brief asks for 90% line. Branch is reported, not enforced.
   minimum_coverage line: 90 if ENV["CI"] || ENV["COVERAGE"]
 end
 
@@ -43,7 +39,6 @@ module ActiveSupport
 
     fixtures :all
 
-    # Rate-limit counters would otherwise survive from one test to the next.
     setup { ActionController::Base.cache_store.clear }
 
     include ActiveJob::TestHelper

@@ -5,4 +5,26 @@ class ApplicationSystemTestCase < ActionDispatch::SystemTestCase
   Selenium::WebDriver::Chrome.path = ENV["CHROME_BINARY"] if ENV["CHROME_BINARY"].present?
 
   driven_by :selenium, using: :headless_chrome, screen_size: [ 1400, 1400 ]
+
+  # A blocked style fails no request, so a broken policy still passes DOM assertions.
+  teardown do
+    violations = page.driver.browser.logs.get(:browser)
+                     .map(&:message)
+                     .grep(/Content Security Policy/)
+
+    assert_empty violations, "the page violated its own content security policy"
+  end
+
+  private
+    # Shadows the generator's cookie-jar helper, which a real browser never sees.
+    # `click_on` returns before the request lands, so the wait is not decoration: without
+    # it the next `visit` arrives as an anonymous visitor.
+    def sign_in_as(user, password: "secret-password")
+      visit new_session_path
+      fill_in "Email", with: user.email
+      fill_in "Password", with: password
+      click_on "Sign in"
+
+      assert_no_current_path new_session_path
+    end
 end

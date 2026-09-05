@@ -62,6 +62,30 @@ class UserTest < ActiveSupport::TestCase
     assert_equal users(:member), User.find_by(email: "ada@umanni.test")
   end
 
+  test "refuses to take the role from the last admin" do
+    admin = only_admin
+
+    assert_not admin.update(role: :user)
+    assert_includes admin.errors.attribute_names, :role
+    assert_predicate admin.reload, :admin?
+  end
+
+  test "refuses to destroy the last admin" do
+    admin = only_admin
+
+    assert_no_difference -> { User.count } do
+      assert_not admin.destroy
+    end
+
+    assert_equal 1, User.admin.count
+  end
+
+  test "allows demoting an admin while another one remains" do
+    users(:member).update!(role: :admin)
+
+    assert users(:admin).update(role: :user)
+  end
+
   test "destroys its sessions when destroyed" do
     user = users(:member)
     user.sessions.create!
@@ -72,6 +96,11 @@ class UserTest < ActiveSupport::TestCase
   end
 
   private
+    def only_admin
+      User.admin.where.not(id: users(:admin).id).destroy_all
+      users(:admin)
+    end
+
     def build(**attributes)
       User.new({
         full_name: "Katherine Johnson",

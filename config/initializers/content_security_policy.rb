@@ -1,29 +1,24 @@
-# Be sure to restart your server when you modify this file.
+# Everything is served from this origin, so there is no CDN to allow. `blob:` is for the
+# object URLs the avatar preview creates.
+Rails.application.configure do
+  config.content_security_policy do |policy|
+    policy.default_src :none
+    policy.base_uri    :self
+    policy.form_action :self
+    policy.frame_ancestors :none
+    policy.connect_src :self
+    policy.font_src    :self
+    policy.img_src     :self, :blob
+    policy.object_src  :none
+    policy.script_src  :self
+    policy.style_src   :self
+    # The import bar's width is a style attribute, and nonces do not apply to attributes.
+    policy.style_src_attr :unsafe_inline
+  end
 
-# Define an application-wide content security policy.
-# See the Securing Rails Applications Guide for more information:
-# https://guides.rubyonrails.org/security.html#content-security-policy-header
-
-# Rails.application.configure do
-#   config.content_security_policy do |policy|
-#     policy.default_src :self, :https
-#     policy.font_src    :self, :https, :data
-#     policy.img_src     :self, :https, :data
-#     policy.object_src  :none
-#     policy.script_src  :self, :https
-#     policy.style_src   :self, :https
-#     # Specify URI for violation reports
-#     # policy.report_uri "/csp-violation-report-endpoint"
-#   end
-#
-#   # Generate session nonces for permitted importmap, inline scripts, and inline styles.
-#   config.content_security_policy_nonce_generator = ->(request) { request.session.id.to_s }
-#   config.content_security_policy_nonce_directives = %w(script-src style-src)
-#
-#   # Automatically add `nonce` to `javascript_tag`, `javascript_include_tag`, and `stylesheet_link_tag`
-#   # if the corresponding directives are specified in `content_security_policy_nonce_directives`.
-#   # config.content_security_policy_nonce_auto = true
-#
-#   # Report violations without enforcing the policy.
-#   # config.content_security_policy_report_only = true
-# end
+  # Random per response, not derived from the session id: a visitor with no session yet
+  # gets an empty nonce, which matches nothing and blocks the import map.
+  config.content_security_policy_nonce_generator = ->(_request) { SecureRandom.base64(16) }
+  # style-src too: Turbo stamps its navigation bar's <style> with the page nonce.
+  config.content_security_policy_nonce_directives = %w[ script-src style-src ]
+end

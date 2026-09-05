@@ -5,6 +5,7 @@ class RegistrationsControllerTest < ActionDispatch::IntegrationTest
     get new_registration_path
 
     assert_response :success
+    assert_select "input[type=submit][data-turbo-submits-with=?]", "Creating…"
   end
 
   test "registers a visitor and signs them in" do
@@ -36,6 +37,15 @@ class RegistrationsControllerTest < ActionDispatch::IntegrationTest
     end
 
     assert_response :bad_request
+  end
+
+  test "rate limits repeated registrations from the same address" do
+    11.times do |index|
+      post registration_path, params: { user: valid_attributes.merge(email: "visitor#{index}@umanni.test") }
+    end
+
+    assert_redirected_to new_registration_path
+    assert_equal "Too many attempts. Try again later.", flash[:alert]
   end
 
   private

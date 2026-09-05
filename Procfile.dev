@@ -1,6 +1,5 @@
 web: bin/rails server
-# `always` keeps the watcher alive when stdin is not a TTY. Without it the CSS
-# process exits the moment it starts under Docker Compose, and foreman takes the
+# Without `always` the watcher exits when stdin is not a TTY, and foreman takes the
 # whole application down with it.
 css: bin/rails tailwindcss:watch[always]
 jobs: bin/jobs

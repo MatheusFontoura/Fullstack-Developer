@@ -1,8 +1,6 @@
 @import "tailwindcss";
 
-/* A deliberately small component layer. Every screen in this application is a form,
-   a table or a card, and repeating the same twelve utility classes on each input is
-   how a Tailwind codebase becomes unreadable. Anything used once stays inline. */
+/* Small component layer; anything used once stays inline. */
 
 @theme {
   --color-brand-50: oklch(0.97 0.014 254.6);
@@ -28,8 +26,7 @@
            disabled:bg-slate-50 disabled:text-slate-500;
   }
 
-  /* Paired with the invalid: variant so the browser's own validity state drives the
-     styling — no JavaScript needed for the first layer of form feedback. */
+  /* The browser's own validity state drives this; no JavaScript. */
   .field-input:user-invalid {
     @apply border-red-400 focus:border-red-500 focus:ring-red-100;
   }
@@ -42,8 +39,7 @@
     @apply mt-1.5 text-sm text-red-600;
   }
 
-  /* Tailwind v4 will not @apply one component class inside another, so the shared
-     base is expressed as a selector list rather than by composition. */
+  /* Tailwind v4 will not @apply one component class inside another. */
   .btn, .btn-primary, .btn-secondary, .btn-danger {
     @apply inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2
            text-sm font-medium transition-colors cursor-pointer

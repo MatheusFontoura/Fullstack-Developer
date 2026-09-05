@@ -1,5 +1,7 @@
 class RegistrationsController < ApplicationController
   allow_unauthenticated_access
+  rate_limit to: 10, within: 3.minutes, only: :create,
+             with: -> { redirect_to new_registration_path, alert: "Too many attempts. Try again later." }
 
   def new
     @user = User.new
@@ -17,8 +19,6 @@ class RegistrationsController < ApplicationController
   end
 
   private
-    # :role is absent by design. Self-registration always produces a plain user, and
-    # a crafted role parameter has to be ignored rather than merely unused.
     def registration_params
       params.expect(user: [ :full_name, :email, :password, :password_confirmation ])
     end

@@ -10,7 +10,7 @@ class PasswordsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "create" do
-    post passwords_path, params: { email: @user.email }
+    post passwords_path, params: { password_reset: { email: @user.email } }
 
     assert_enqueued_email_with PasswordsMailer, :reset, args: [ @user ]
     assert_redirected_to new_session_path
@@ -21,7 +21,7 @@ class PasswordsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "create for an unknown user redirects but sends no mail" do
-    post passwords_path, params: { email: "missing-user@example.com" }
+    post passwords_path, params: { password_reset: { email: "missing-user@example.com" } }
 
     assert_enqueued_emails 0
     assert_redirected_to new_session_path
@@ -49,7 +49,7 @@ class PasswordsControllerTest < ActionDispatch::IntegrationTest
 
   test "update" do
     assert_changes -> { @user.reload.password_digest } do
-      put password_path(@user.password_reset_token), params: { password: "a-new-password", password_confirmation: "a-new-password" }
+      put password_path(@user.password_reset_token), params: { password_reset: { password: "a-new-password", password_confirmation: "a-new-password" } }
 
       assert_redirected_to new_session_path
     end
@@ -62,7 +62,7 @@ class PasswordsControllerTest < ActionDispatch::IntegrationTest
   test "update with non matching passwords" do
     token = @user.password_reset_token
     assert_no_changes -> { @user.reload.password_digest } do
-      put password_path(token), params: { password: "no-match-here", password_confirmation: "different-one" }
+      put password_path(token), params: { password_reset: { password: "no-match-here", password_confirmation: "different-one" } }
     end
 
     assert_response :unprocessable_content
@@ -71,7 +71,7 @@ class PasswordsControllerTest < ActionDispatch::IntegrationTest
 
   test "update reports the real reason when the new password is too short" do
     assert_no_changes -> { @user.reload.password_digest } do
-      put password_path(@user.password_reset_token), params: { password: "short", password_confirmation: "short" }
+      put password_path(@user.password_reset_token), params: { password_reset: { password: "short", password_confirmation: "short" } }
     end
 
     assert_response :unprocessable_content
