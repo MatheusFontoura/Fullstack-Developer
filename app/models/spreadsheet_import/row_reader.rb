@@ -22,6 +22,11 @@ class SpreadsheetImport
     # can point the admin at a row they can actually find.
     def each_row
       header = normalized_header
+      # A file exported with ";" separators parses as one column, and one without an
+      # email column imports nothing. Both used to finish as a silent 0 of 0.
+      unless header.include?(:email)
+        raise ArgumentError, "the file has no `email` column (found: #{header.join(", ")})"
+      end
 
       ((HEADER_ROW + 1)..@sheet.last_row.to_i).each do |line|
         attributes = attributes_from(header, @sheet.row(line))
