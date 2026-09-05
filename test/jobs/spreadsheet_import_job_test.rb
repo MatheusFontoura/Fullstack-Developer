@@ -104,6 +104,21 @@ class SpreadsheetImportJobTest < ActiveJob::TestCase
     User.skip_callback(:create, :before, racer)
   end
 
+  test "fails with a readable reason when the file has no email column" do
+    path = Rails.root.join("tmp", "semicolons-#{SecureRandom.hex(4)}.csv")
+    path.write("full_name;email;role\nAda Lovelace;ada.semi@umanni.test;user\n")
+    import = users(:admin).spreadsheet_imports.create!(file: { io: path.open, filename: "semi.csv" })
+
+    assert_raises ArgumentError do
+      SpreadsheetImportJob.perform_now(import)
+    end
+
+    assert_predicate import.reload, :failed?
+    assert_match "no `email` column", import.failure_reason
+  ensure
+    path&.delete
+  end
+
   test "marks the import failed, records why, and re-raises when the file cannot be read" do
     import = build_import("not-an-image.txt", skip_validation: true)
 
