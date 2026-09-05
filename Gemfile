@@ -41,7 +41,7 @@ gem "thruster", require: false
 gem "image_processing", "~> 1.2"
 
 # Reads .csv and .xlsx spreadsheets behind a single interface [https://github.com/roo-rb/roo]
-gem "roo", "~> 2.10"
+gem "roo", "~> 3.0"
 # No longer a default gem as of Ruby 3.4; required by Roo's CSV backend.
 gem "csv"
 
