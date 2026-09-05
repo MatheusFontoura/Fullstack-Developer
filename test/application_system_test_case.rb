@@ -25,6 +25,9 @@ class ApplicationSystemTestCase < ActionDispatch::SystemTestCase
       fill_in "Password", with: password
       click_on "Sign in"
 
-      assert_no_current_path new_session_path
+      # A bare path assertion says nothing when it fails; the page usually knows why.
+      return if has_no_current_path?(new_session_path, wait: 5)
+
+      flunk "sign-in did not complete: #{page.text[0, 200]}"
     end
 end
