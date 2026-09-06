@@ -10,7 +10,7 @@
 </div>
 
 <%= form_with url: admin_users_path, method: :get, class: "mt-6 flex flex-wrap items-end gap-x-3 gap-y-2" do |form| %>
-  <div class="min-w-56 flex-1">
+  <div class="min-w-56 max-w-sm flex-1">
     <%= form.label :query, "Search by name", class: "field-label" %>
     <%= form.search_field :query, value: params[:query], placeholder: "Ada", class: "field-input" %>
   </div>
@@ -23,7 +23,7 @@
   </div>
 
   <div class="flex w-full items-center gap-3 sm:w-auto">
-    <%= form.submit "Filter", class: "btn-secondary grow sm:grow-0" %>
+    <%= form.submit "Filter", name: nil, class: "btn-secondary grow sm:grow-0" %>
     <% if params[:query].present? || params[:role].present? %>
       <%= link_to "Clear", admin_users_path, class: "text-sm text-slate-500 hover:text-slate-700" %>
     <% end %>
