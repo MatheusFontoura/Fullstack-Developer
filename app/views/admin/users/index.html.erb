@@ -9,7 +9,7 @@
   <%= link_to "New user", new_admin_user_path, class: "btn-primary" %>
 </div>
 
-<%= form_with url: admin_users_path, method: :get, class: "mt-6 flex flex-wrap items-end gap-3" do |form| %>
+<%= form_with url: admin_users_path, method: :get, class: "mt-6 flex flex-wrap items-end gap-x-3 gap-y-2" do |form| %>
   <div class="min-w-56 flex-1">
     <%= form.label :query, "Search by name", class: "field-label" %>
     <%= form.search_field :query, value: params[:query], placeholder: "Ada", class: "field-input" %>
@@ -22,19 +22,21 @@
           { include_blank: "All roles" }, class: "field-input" %>
   </div>
 
-  <%= form.submit "Filter", class: "btn-secondary" %>
-  <% if params[:query].present? || params[:role].present? %>
-    <%= link_to "Clear", admin_users_path, class: "text-sm text-slate-500 hover:text-slate-700" %>
-  <% end %>
+  <div class="flex w-full items-center gap-3 sm:w-auto">
+    <%= form.submit "Filter", class: "btn-secondary grow sm:grow-0" %>
+    <% if params[:query].present? || params[:role].present? %>
+      <%= link_to "Clear", admin_users_path, class: "text-sm text-slate-500 hover:text-slate-700" %>
+    <% end %>
+  </div>
 <% end %>
 
-<div class="card mt-6 overflow-x-auto">
+<div class="card table-scroll mt-6">
   <table class="min-w-full divide-y divide-slate-200 text-left">
     <thead class="bg-slate-50 text-xs font-semibold uppercase tracking-wide text-slate-500">
       <tr>
-        <th scope="col" class="sticky left-0 z-10 bg-slate-50 px-4 py-3">User</th>
-        <th scope="col" class="px-4 py-3">Role</th>
-        <th scope="col" class="hidden px-4 py-3 sm:table-cell">Joined</th>
+        <th scope="col" class="bg-slate-50 px-4 py-3 sm:sticky sm:left-0 sm:z-10">User</th>
+        <th scope="col" class="w-32 px-4 py-3">Role</th>
+        <th scope="col" class="hidden w-40 px-4 py-3 sm:table-cell">Joined</th>
         <th scope="col" class="px-4 py-3 text-right">Actions</th>
       </tr>
     </thead>

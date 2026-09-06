@@ -15,6 +15,17 @@
     @apply bg-white rounded-xl border border-slate-200 shadow-sm;
   }
 
+  /* Shading at the edges that fades out when the scroll reaches them, so a table wider
+     than the phone says so. The local/scroll attachment pair is what makes it react. */
+  .table-scroll {
+    @apply overflow-x-auto;
+    background:
+      linear-gradient(to right, var(--color-white), transparent) left / 20px 100% no-repeat local,
+      linear-gradient(to left, var(--color-white), transparent) right / 20px 100% no-repeat local,
+      linear-gradient(to right, rgb(15 23 42 / 0.10), transparent) left / 10px 100% no-repeat scroll,
+      linear-gradient(to left, rgb(15 23 42 / 0.10), transparent) right / 10px 100% no-repeat scroll;
+  }
+
   .field-label {
     @apply block text-sm font-medium text-slate-700 mb-1.5;
   }
@@ -31,6 +42,11 @@
      under a grey box. */
   .field-input[aria-invalid="true"], .field-input:user-invalid {
     @apply border-red-400 focus:border-red-500 focus:ring-red-100;
+  }
+
+  /* The native file button makes this taller than every other field otherwise. */
+  .field-input[type="file"] {
+    @apply py-1.5;
   }
 
   .field-hint {
@@ -63,15 +79,35 @@
            focus-visible:outline-red-500;
   }
 
-  .badge, .badge-admin, .badge-user {
-    @apply inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium;
+  .badge, .badge-admin, .badge-user,
+  .badge-neutral, .badge-info, .badge-success, .badge-danger {
+    @apply inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium
+           ring-1 ring-inset;
   }
 
+  /* Role. Admin has to read as different at a glance, not on inspection. */
   .badge-admin {
-    @apply bg-brand-50 text-brand-700 ring-1 ring-inset ring-brand-100;
+    @apply bg-brand-100 text-brand-700 ring-brand-500/30;
   }
 
   .badge-user {
-    @apply bg-slate-100 text-slate-700 ring-1 ring-inset ring-slate-200;
+    @apply bg-slate-100 text-slate-600 ring-slate-300;
+  }
+
+  /* Status. A finished import and a running one were the same grey. */
+  .badge-neutral {
+    @apply bg-slate-100 text-slate-600 ring-slate-300;
+  }
+
+  .badge-info {
+    @apply bg-sky-50 text-sky-700 ring-sky-200;
+  }
+
+  .badge-success {
+    @apply bg-emerald-50 text-emerald-700 ring-emerald-200;
+  }
+
+  .badge-danger {
+    @apply bg-red-50 text-red-700 ring-red-200;
   }
 }

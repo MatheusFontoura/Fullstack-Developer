@@ -2,7 +2,7 @@
 <div id="<%= dom_id(spreadsheet_import, :progress) %>" class="card p-6">
   <div class="flex flex-wrap items-center justify-between gap-3">
     <div class="flex items-center gap-3">
-      <span class="<%= spreadsheet_import.failed? ? "badge-admin bg-red-50 text-red-700 ring-red-200" : "badge-user" %>">
+      <span class="<%= import_status_badge(spreadsheet_import) %>">
         <%= spreadsheet_import.status.capitalize %>
       </span>
       <p class="text-sm text-slate-500">
@@ -45,7 +45,10 @@
   <% if spreadsheet_import.failure_reason.present? %>
     <div class="mt-5 rounded-lg bg-red-50 px-4 py-3 ring-1 ring-inset ring-red-200">
       <p class="text-sm font-medium text-red-800">The file could not be read</p>
-      <p class="mt-1 font-mono text-sm break-words text-red-700"><%= spreadsheet_import.failure_reason %></p>
+      <p class="mt-1 text-sm text-red-700">
+        Check that it opens in a spreadsheet application and has a header row.
+      </p>
+      <p class="mt-2 font-mono text-xs break-words text-red-600/80"><%= spreadsheet_import.failure_reason %></p>
     </div>
   <% end %>
 

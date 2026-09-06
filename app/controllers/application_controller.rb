@@ -19,6 +19,11 @@ class ApplicationController < ActionController::Base
       ActionDispatch::Http::UploadedFile
     end
 
+    # Nothing to do on a sign-in or sign-up screen once you are signed in.
+    def redirect_if_authenticated
+      redirect_to home_url_for(Current.user) if authenticated?
+    end
+
     def home_url_for(user)
       user.admin? ? admin_dashboard_url : profile_url
     end

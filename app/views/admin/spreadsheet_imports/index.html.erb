@@ -9,15 +9,15 @@
   <%= link_to "New import", new_admin_spreadsheet_import_path, class: "btn-primary" %>
 </div>
 
-<div class="card mt-6 overflow-x-auto">
+<div class="card table-scroll mt-6">
   <table class="min-w-full divide-y divide-slate-200 text-left">
     <thead class="bg-slate-50 text-xs font-semibold uppercase tracking-wide text-slate-500">
       <tr>
         <th scope="col" class="px-4 py-3">File</th>
         <th scope="col" class="px-4 py-3">Status</th>
         <th scope="col" class="px-4 py-3">Rows</th>
-        <th scope="col" class="hidden px-4 py-3 sm:table-cell">Uploaded by</th>
-        <th scope="col" class="px-4 py-3 text-right whitespace-nowrap">Started</th>
+        <th scope="col" class="hidden px-4 py-3 md:table-cell">Uploaded by</th>
+        <th scope="col" class="hidden px-4 py-3 text-right whitespace-nowrap sm:table-cell">Started</th>
       </tr>
     </thead>
 
@@ -31,17 +31,17 @@
                     class: "font-medium text-brand-600 hover:text-brand-700" %>
             </td>
             <td class="px-4 py-3">
-              <span class="<%= spreadsheet_import.failed? ? "badge-admin bg-red-50 text-red-700 ring-red-200" : "badge-user" %>">
+              <span class="<%= import_status_badge(spreadsheet_import) %>">
                 <%= spreadsheet_import.status.capitalize %>
               </span>
             </td>
             <td class="px-4 py-3 text-sm whitespace-nowrap tabular-nums text-slate-600">
               <%= spreadsheet_import.imported_rows %> imported<%= ", #{spreadsheet_import.failed_rows} rejected" if spreadsheet_import.failed_rows.positive? %>
             </td>
-            <td class="hidden px-4 py-3 text-sm text-slate-500 sm:table-cell">
+            <td class="hidden px-4 py-3 text-sm text-slate-500 md:table-cell">
               <%= spreadsheet_import.user.full_name %>
             </td>
-            <td class="px-4 py-3 text-right text-sm whitespace-nowrap text-slate-500">
+            <td class="hidden px-4 py-3 text-right text-sm whitespace-nowrap text-slate-500 sm:table-cell">
               <%= time_ago_in_words(spreadsheet_import.created_at) %> ago
             </td>
           </tr>
