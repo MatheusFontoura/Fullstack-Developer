@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_09_03_164525) do
+ActiveRecord::Schema[8.1].define(version: 2026_09_06_020151) do
   create_table "active_storage_attachments", force: :cascade do |t|
     t.bigint "blob_id", null: false
     t.datetime "created_at", null: false
@@ -70,6 +70,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_03_164525) do
     t.string "role", default: "user", null: false
     t.datetime "updated_at", null: false
     t.index ["email"], name: "index_users_on_email", unique: true
+    t.index ["full_name"], name: "index_users_on_full_name"
     t.check_constraint "role IN ('user', 'admin')", name: "users_role_check"
   end
 
