@@ -24,12 +24,23 @@ services:
       - log:/rails/log
     environment:
       RAILS_ENV: development
+      # The port the browser reaches, so reset links in mail point somewhere real.
+      WEB_PORT: "${WEB_PORT:-3200}"
     healthcheck:
       test: [ "CMD", "curl", "-fsS", "http://localhost:3000/up" ]
       interval: 10s
       timeout: 5s
       retries: 10
       start_period: 40s
+
+  # Catches password-reset mail so the link can be clicked in development.
+  # Start it with: docker compose --profile mail up
+  mail:
+    image: axllent/mailpit
+    profiles: [ mail ]
+    ports:
+      - "1025:1025"
+      - "${MAIL_UI_PORT:-8025}:8025"
 
 volumes:
   bundle:

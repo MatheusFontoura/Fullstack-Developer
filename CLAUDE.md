@@ -94,6 +94,8 @@
   `style-src-attr 'unsafe-inline'` for computed widths. Adding an external script or stylesheet means updating
   `config/initializers/content_security_policy.rb`. `ApplicationSystemTestCase` fails any test whose page reports a
   violation — a blocked style breaks the interface without failing a single DOM assertion.
+- `ENV["PORT"]` is not the port the app serves on. Foreman gives each Procfile process its own (web 3200, css 3300,
+  jobs 3400), and mail is delivered from the jobs process, so links built from PORT point at the worker. Use `WEB_PORT`.
 - Never pass `request.query_parameters` to `url_for`. It hands the router `host`, `protocol` and `controller` from the
   query string: pagination links get rewritten to another domain, and a bad `controller` is a 500.
 

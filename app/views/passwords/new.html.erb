@@ -12,7 +12,8 @@
               placeholder: "you@company.com", class: "field-input" %>
       </div>
 
-      <%= form.submit "Email reset instructions", class: "btn-primary w-full" %>
+      <%= form.submit "Email reset instructions", class: "btn-primary w-full",
+          data: { turbo_submits_with: "Sending…" } %>
     <% end %>
 
     <p class="mt-6 text-sm">
