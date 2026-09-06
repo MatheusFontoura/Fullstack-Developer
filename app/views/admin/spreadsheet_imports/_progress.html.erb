@@ -55,6 +55,12 @@
   <% if spreadsheet_import.row_errors.any? %>
     <div class="mt-5 border-t border-slate-100 pt-5">
       <p class="text-sm font-medium text-slate-700">Rows that could not be imported</p>
+      <% if spreadsheet_import.unlisted_failures.positive? %>
+        <p class="mt-1 text-sm text-slate-500">
+          Showing the first <%= spreadsheet_import.row_errors.size %>
+          of <%= spreadsheet_import.failed_rows %>.
+        </p>
+      <% end %>
       <ul class="mt-2 space-y-1 text-sm text-slate-600">
         <% spreadsheet_import.row_errors.each do |row_error| %>
           <li>
