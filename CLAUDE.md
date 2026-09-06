@@ -57,8 +57,9 @@
   `db:prepare` seeds a freshly created database, and a production deploy must not come up with demo logins in it.
   Demo logins, password `secret-password`: `admin@umanni.test` (admin), `user@umanni.test` (user).
 - Fixtures use `grace@umanni.test` (admin) and `ada@umanni.test` (user), same password.
-- No SMTP is configured for development, so password-reset mail fails silently (`raise_delivery_errors = false`).
-  Preview at `/rails/mailers`.
+- Development mail goes to SMTP on port 1025, host `SMTP_HOST` (default `localhost`, `mail` under Docker).
+  `docker compose --profile mail up` starts Mailpit on :8025. With nothing listening there delivery fails
+  silently (`raise_delivery_errors = false`). Preview at `/rails/mailers`.
 - `Dockerfile` is the production image: multi-stage, non-root, Thruster. `config/deploy.yml` is a complete Kamal 2
   configuration with three placeholders (registry, image owner, server/host).
 

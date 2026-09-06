@@ -26,6 +26,8 @@ services:
       RAILS_ENV: development
       # The port the browser reaches, so reset links in mail point somewhere real.
       WEB_PORT: "${WEB_PORT:-3200}"
+      # Mailpit answers on the compose network, not on this container's loopback.
+      SMTP_HOST: mail
     healthcheck:
       test: [ "CMD", "curl", "-fsS", "http://localhost:3000/up" ]
       interval: 10s
