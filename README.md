@@ -127,7 +127,7 @@ the same time.
 ## Testing
 
 ```bash
-bin/rails test:all      # unit, integration and system — 151 tests
+bin/rails test:all      # unit, integration and system — 153 tests
 bin/rails test          # skips system tests
 bin/ci                  # the whole pipeline: lint, audits, Brakeman, tests, seeds
 ```
@@ -138,10 +138,10 @@ bin/ci                  # the whole pipeline: lint, audits, Brakeman, tests, see
 | Controllers | 8 | 73 |
 | Integration (incl. security) | 2 | 15 |
 | Jobs | 1 | 11 |
-| System (real Chrome) | 5 | 22 |
+| System (real Chrome) | 6 | 24 |
 | Configuration | 1 | 3 |
 
-**151 tests, 523 assertions, 98.76% line coverage, 96.29% branch coverage.** Tests run
+**153 tests, 545 assertions, 98.76% line coverage, 96.29% branch coverage.** Tests run
 in parallel across one process per core, and SimpleCov results are merged per worker —
 without that merge the report shows roughly one worker's share and every number after it
 is fiction. The 90% floor is enforced under `CI` or `COVERAGE`.
@@ -305,7 +305,8 @@ catch. Server-side errors render both as a summary and beside the field that cau
 them, with `aria-invalid` and `aria-describedby` so a screen reader gets the pairing.
 
 Layout is Tailwind, mobile-first. The users table scrolls inside its own container on a
-phone with the name column pinned, so the row still says whose it is.
+phone with the name column pinned, so the row still says whose it is. A system test
+resizes to 390px and fails if any screen is wider than the viewport.
 
 ---
 
