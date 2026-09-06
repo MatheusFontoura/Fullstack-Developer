@@ -135,10 +135,34 @@ class Admin::UsersControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
   end
 
+  # A second admin, or the last-admin invariant is what blocks this and the test says
+  # nothing about the parameter being stripped.
   test "an admin cannot take their own role away through the edit form" do
-    patch admin_user_path(users(:admin)), params: { user: { role: "user" } }
+    User.create!(full_name: "Katherine Johnson", email: "katherine@umanni.test",
+                 password: "secret-password", password_confirmation: "secret-password", role: "admin")
 
+    patch admin_user_path(users(:admin)), params: { user: { full_name: "Grace B. Hopper", role: "user" } }
+
+    assert_redirected_to admin_users_path
     assert_predicate users(:admin).reload, :admin?
+    assert_equal "Grace B. Hopper", users(:admin).reload.full_name
+  end
+
+  test "every route that changes something is closed to a plain user" do
+    sign_out
+    sign_in_as users(:member)
+    target = users(:member)
+
+    assert_no_changes -> { [ User.count, target.reload.role, target.full_name ] } do
+      post admin_users_path, params: { user: { full_name: "Mallory", email: "mallory@umanni.test",
+                                               password: "secret-password", password_confirmation: "secret-password",
+                                               role: "admin" } }
+      patch admin_user_path(target), params: { user: { full_name: "Renamed", role: "admin" } }
+      patch admin_user_role_path(target)
+      delete admin_user_path(target)
+    end
+
+    assert_redirected_to profile_url
   end
 
   test "refuses to delete the signed in admin" do

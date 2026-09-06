@@ -3,13 +3,13 @@ require "test_helper"
 class PasswordsControllerTest < ActionDispatch::IntegrationTest
   setup { @user = User.take }
 
-  test "new" do
+  test "shows the form" do
     get new_password_path
 
     assert_response :success
   end
 
-  test "create" do
+  test "enqueues the reset mail and says so without confirming the address" do
     post passwords_path, params: { password_reset: { email: @user.email } }
 
     assert_enqueued_email_with PasswordsMailer, :reset, args: [ @user ]
@@ -31,13 +31,13 @@ class PasswordsControllerTest < ActionDispatch::IntegrationTest
     assert_notice "reset instructions are on the way"
   end
 
-  test "edit" do
+  test "opens the form for a valid token" do
     get edit_password_path(@user.password_reset_token)
 
     assert_response :success
   end
 
-  test "edit with invalid password reset token" do
+  test "refuses a token this application did not sign" do
     get edit_password_path("invalid token")
 
     assert_redirected_to new_password_path
@@ -47,19 +47,26 @@ class PasswordsControllerTest < ActionDispatch::IntegrationTest
     assert_notice "reset link is invalid"
   end
 
-  test "update" do
+  # A reset is what someone does when they have lost control of the account, so every
+  # browser holding a session has to go — including the one asking.
+  test "resetting the password signs every browser out" do
+    @user.sessions.create!
+    @user.sessions.create!
+
     assert_changes -> { @user.reload.password_digest } do
       put password_path(@user.password_reset_token), params: { password_reset: { password: "a-new-password", password_confirmation: "a-new-password" } }
 
       assert_redirected_to new_session_path
     end
 
+    assert_empty @user.sessions.reload
+
     follow_redirect!
 
     assert_notice "Password has been reset"
   end
 
-  test "update with non matching passwords" do
+  test "refuses a confirmation that does not match" do
     token = @user.password_reset_token
     assert_no_changes -> { @user.reload.password_digest } do
       put password_path(token), params: { password_reset: { password: "no-match-here", password_confirmation: "different-one" } }

@@ -96,6 +96,17 @@ class SecurityTest < ActionDispatch::IntegrationTest
     end
   end
 
+  # The cookie carries a row id. Unsigned, it would be an invitation to type someone
+  # else's.
+  test "ignores a session cookie this application did not sign" do
+    sign_out
+    cookies[:session_id] = users(:admin).sessions.create!.id
+
+    get admin_users_path
+
+    assert_redirected_to new_session_url
+  end
+
   private
     # Rails turns forgery protection off in test.
     def with_forgery_protection
