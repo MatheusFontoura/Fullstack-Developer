@@ -15,7 +15,7 @@
       <div>
         <%= form.label :password, class: "field-label" %>
         <%= form.password_field :password, required: true, autocomplete: "current-password",
-              maxlength: 72, placeholder: "••••••••", class: "field-input" %>
+              maxlength: 72, placeholder: "Your password", class: "field-input" %>
       </div>
 
       <%= form.submit "Sign in", class: "btn-primary w-full", data: { turbo_submits_with: "Signing in…" } %>

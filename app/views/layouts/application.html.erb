@@ -25,8 +25,12 @@
     <%# Signed-out screens are one card and centre; signed-in ones are lists. %>
     <main class="mx-auto flex w-full max-w-6xl flex-1 flex-col px-4 py-8 sm:px-6 lg:px-8
                  <%= "justify-center" unless authenticated? %>">
-      <%= render "shared/flash" %>
-      <%= yield %>
+      <%# Signed-out screens are one narrow card, and a full-width alert above it reads
+          as belonging to something else. %>
+      <div class="<%= "mx-auto w-full max-w-md" unless authenticated? %>">
+        <%= render "shared/flash" %>
+        <%= yield %>
+      </div>
     </main>
   </body>
 </html>
