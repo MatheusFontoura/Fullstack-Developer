@@ -164,7 +164,8 @@ class SpreadsheetImportJobTest < ActiveJob::TestCase
     path&.delete
   end
 
-  # Guards the debounce bug: see SpreadsheetImportJob#import_rows.
+  # Guards the pacing, not the suppression around it: turbo-rails debounces immediately
+  # in test, so removing User.suppressing_turbo_broadcasts leaves this green.
   test "refreshes the dashboard while a long import runs, not only at the end" do
     import = build_import("bulk_users.csv")
 

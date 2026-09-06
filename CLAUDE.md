@@ -111,8 +111,9 @@
   encrypted column.
 - `shared/_avatar.html.erb` checks `avatar_image.attachment&.persisted?`, not `attached?`. Re-rendering a form after a
   failed create otherwise asks for a URL to a blob with no id and raises.
-- In system tests `click_on` returns before the request completes. `ApplicationSystemTestCase#sign_in_as` ends with
-  `assert_no_current_path new_session_path` so the next `visit` is not made as an anonymous visitor.
+- In system tests `click_on` returns before the request completes. `ApplicationSystemTestCase#sign_in_as` waits on
+  `has_no_current_path?(new_session_path)` and flunks with the page text, so the next `visit` is not made as an
+  anonymous visitor and a failure says why.
 - `Dockerfile.dev` has no `USER`, so the container runs as root. `tmp` and `log` are named volumes in `compose.yaml`;
   bind-mounting them leaves root-owned files on the host that block a local `bin/dev` from writing its bootsnap cache.
   Read container logs with `docker compose logs`.
