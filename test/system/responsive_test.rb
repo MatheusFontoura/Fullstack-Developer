@@ -4,6 +4,11 @@ require "application_system_test_case"
 # screenshot of the top of the page.
 class ResponsiveTest < ApplicationSystemTestCase
   PHONE = [ 390, 844 ].freeze
+  DESKTOP = [ 1400, 1400 ].freeze
+
+  # The browser is reused across tests in a worker, so a phone-sized window would
+  # otherwise be inherited by whatever runs next.
+  teardown { resize_window_to(*DESKTOP) }
 
   test "no signed-in screen scrolls sideways on a phone" do
     sign_in_as users(:admin)
@@ -50,7 +55,11 @@ class ResponsiveTest < ApplicationSystemTestCase
 
   private
     def resize_to_phone
-      page.driver.browser.manage.window.resize_to(*PHONE)
+      resize_window_to(*PHONE)
+    end
+
+    def resize_window_to(width, height)
+      page.driver.browser.manage.window.resize_to(width, height)
     end
 
     def assert_no_horizontal_overflow(path)

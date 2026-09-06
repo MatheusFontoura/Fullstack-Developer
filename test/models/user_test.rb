@@ -97,6 +97,15 @@ class UserTest < ActiveSupport::TestCase
     assert_includes user.errors[:avatar_image], "must be a PNG, JPEG or WebP image"
   end
 
+  test "rejects an avatar over the size cap" do
+    user = build
+    padded = StringIO.new(file_fixture("avatar.png").binread + ("\0" * User::AVATAR_MAX_SIZE))
+    user.avatar_image.attach(io: padded, filename: "avatar.png", content_type: "image/png")
+
+    assert_predicate user, :invalid?
+    assert_includes user.errors[:avatar_image], "must be under 2 MB"
+  end
+
   test "rejects an empty file" do
     user = build
     user.avatar_image.attach(

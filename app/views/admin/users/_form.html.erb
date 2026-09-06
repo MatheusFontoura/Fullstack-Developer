@@ -3,15 +3,15 @@
 
   <div>
     <%= form.label :full_name, "Full name", class: "field-label" %>
-    <%= form.text_field :full_name, **field_error_attributes(user, :full_name), required: true, autofocus: true, maxlength: 120,
+    <%= form.text_field :full_name, **field_error_attributes(user, :full_name), required: true, autofocus: true, autocomplete: "name", maxlength: 120,
           placeholder: "Ada Lovelace", class: "field-input" %>
-        <%= field_error user, :full_name %>
+    <%= field_error user, :full_name %>
   </div>
 
   <div>
     <%= form.label :email, class: "field-label" %>
-    <%= form.email_field :email, **field_error_attributes(user, :email), required: true, placeholder: "ada@company.com", class: "field-input" %>
-        <%= field_error user, :email %>
+    <%= form.email_field :email, **field_error_attributes(user, :email), required: true, autocomplete: "username", placeholder: "ada@company.com", class: "field-input" %>
+    <%= field_error user, :email %>
   </div>
 
   <% unless user == Current.user %>
@@ -35,7 +35,7 @@
             class: "field-input file:mr-3 file:rounded-md file:border-0 file:bg-slate-100
                     file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-slate-700" %>
     </div>
-    <%= field_error user, :avatar_image %>
+      <%= field_error user, :avatar_image %>
     <p class="field-hint">PNG, JPEG or WebP, up to 2 MB.</p>
     <% if user.avatar_image.attachment&.persisted? %>
       <label class="mt-2 flex items-center gap-2 text-sm text-slate-600">
@@ -50,7 +50,7 @@
       <%= form.label :password, class: "field-label" %>
       <%= form.password_field :password, **field_error_attributes(user, :password), autocomplete: "new-password", minlength: 8, maxlength: 72,
             placeholder: "Your password", class: "field-input" %>
-        <%= field_error user, :password %>
+      <%= field_error user, :password %>
       <p class="field-hint"><%= user.persisted? ? "Leave blank to keep the current password." : "At least 8 characters." %></p>
     </div>
 
@@ -58,7 +58,7 @@
       <%= form.label :password_confirmation, "Confirm password", class: "field-label" %>
       <%= form.password_field :password_confirmation, **field_error_attributes(user, :password_confirmation), autocomplete: "new-password",
             minlength: 8, maxlength: 72, placeholder: "Your password", class: "field-input" %>
-        <%= field_error user, :password_confirmation %>
+      <%= field_error user, :password_confirmation %>
     </div>
   </div>
 

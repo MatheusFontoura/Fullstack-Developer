@@ -48,7 +48,8 @@ Rails.application.configure do
   # Mail goes to a local catcher when one is running (`docker compose --profile mail up`),
   # so the reset link can actually be clicked. Without it, delivery is a no-op.
   config.action_mailer.delivery_method = :smtp
-  config.action_mailer.smtp_settings = { address: "localhost", port: 1025 }
+  # Mailpit is a sibling container under Docker, so "localhost" there is this process.
+  config.action_mailer.smtp_settings = { address: ENV.fetch("SMTP_HOST", "localhost"), port: 1025 }
 
   # Print deprecation notices to the Rails logger.
   config.active_support.deprecation = :log

@@ -35,11 +35,15 @@ class SecurityTest < ActionDispatch::IntegrationTest
     assert_no_match "<script>alert('row')", response.body
   end
 
+  # Unescaped, "%" matches everyone and "_" matches everyone with a name — both turn
+  # the search box into a way to page through the whole table.
   test "treats LIKE wildcards in a search term as literal characters" do
-    get admin_users_path(query: "%")
+    [ "%", "_" ].each do |wildcard|
+      get admin_users_path(query: wildcard)
 
-    assert_response :success
-    assert_select "td", text: /Ada Lovelace/, count: 0
+      assert_response :success
+      assert_select "td", text: /Ada Lovelace/, count: 0, message: "#{wildcard} reached LIKE unescaped"
+    end
   end
 
   test "does not let a search term reach the query as SQL" do
@@ -94,6 +98,17 @@ class SecurityTest < ActionDispatch::IntegrationTest
 
       assert_response :unprocessable_content
     end
+  end
+
+  # The cookie carries a row id. Unsigned, it would be an invitation to type someone
+  # else's.
+  test "ignores a session cookie this application did not sign" do
+    sign_out
+    cookies[:session_id] = users(:admin).sessions.create!.id
+
+    get admin_users_path
+
+    assert_redirected_to new_session_url
   end
 
   private

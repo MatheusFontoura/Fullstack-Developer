@@ -15,10 +15,6 @@ class ApplicationController < ActionController::Base
       session.delete(:return_to_after_authenticating) || home_url_for(Current.user)
     end
 
-    def uploaded_file
-      ActionDispatch::Http::UploadedFile
-    end
-
     # Nothing to do on a sign-in or sign-up screen once you are signed in.
     def redirect_if_authenticated
       redirect_to home_url_for(Current.user) if authenticated?
@@ -45,7 +41,7 @@ class ApplicationController < ActionController::Base
       permitted = permitted.except(:password, :password_confirmation) if permitted[:password].blank?
       # Anything that is not an upload — a blank input, or a string a client invented —
       # is dropped: Active Storage reads a string as a signed id and raises on it.
-      permitted = permitted.except(:avatar_image) unless permitted[:avatar_image].is_a?(uploaded_file)
+      permitted = permitted.except(:avatar_image) unless permitted[:avatar_image].is_a?(ActionDispatch::Http::UploadedFile)
       permitted
     end
 end

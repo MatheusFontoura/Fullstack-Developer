@@ -8,7 +8,7 @@
       <h1 class="text-2xl font-semibold tracking-tight">Import</h1>
       <p class="mt-1 text-sm text-slate-500">
         Started <%= time_ago_in_words(@spreadsheet_import.created_at) %> ago by
-        <%= @spreadsheet_import.user.full_name %>. This page updates itself.
+        <%= @spreadsheet_import.user.full_name %>.
       </p>
     </div>
 
@@ -22,8 +22,4 @@
     <%= render "progress", spreadsheet_import: @spreadsheet_import %>
   </div>
 
-  <p class="mt-4 text-sm text-slate-500">
-    Imported people have no password yet. They set one through
-    <%= link_to "the password reset flow", new_password_path, class: "text-brand-600 hover:text-brand-700" %>.
-  </p>
 </div>

@@ -40,9 +40,12 @@ class SessionsControllerTest < ActionDispatch::IntegrationTest
   test "signs out" do
     sign_in_as users(:member)
 
+    record = users(:member).sessions.sole
+
     delete session_path
 
     assert_redirected_to new_session_path
     assert_empty cookies[:session_id].to_s
+    assert_nil Session.find_by(id: record.id), "the row outlived the cookie"
   end
 end

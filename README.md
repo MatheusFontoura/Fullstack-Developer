@@ -53,6 +53,18 @@ gate sent the phase back rather than forward.
   entrypoint runs `db:prepare`. Found by running the image rather than only building it.
 - A content security policy added in review blocked the import bar's inline width, so it
   rendered full at every percentage while every test still passed.
+- `docker compose --profile mail up` promised a clickable reset link at :8025 and never
+  delivered one: SMTP pointed at `localhost`, which inside the web container is that
+  container. `raise_delivery_errors` is off in development, so it failed in silence.
+  Found by following this README's own instructions instead of trusting them.
+
+**What the gates did not catch.** A commit titled "cut comments that narrate the code"
+also deleted a security test — the one asserting a forged session cookie is ignored —
+and tightened `img_src`. Both changes were fine on their own; neither belonged in that
+commit, and nobody noticed the missing test until a review with no memory of writing it
+went looking. The test is back. Two further tests turned out to pass with the defence
+they named removed, because a different rule was doing the blocking. Reviewing by commit
+message is not reviewing, and a green suite says nothing about tests that cannot fail.
 
 ### A note on the hidden instructions in the brief
 
@@ -127,21 +139,14 @@ the same time.
 ## Testing
 
 ```bash
-bin/rails test:all      # unit, integration and system — 158 tests
+bin/rails test:all      # unit, integration and system
 bin/rails test          # skips system tests
 bin/ci                  # the whole pipeline: lint, audits, Brakeman, tests, seeds
 ```
 
-| Layer | Files | Tests |
-|---|---|---|
-| Models and POROs | 3 | 27 |
-| Controllers | 8 | 73 |
-| Integration (incl. security) | 2 | 15 |
-| Jobs | 1 | 11 |
-| System (real Chrome) | 6 | 25 |
-| Configuration | 1 | 3 |
-
-**158 tests, 557 assertions, 98.82% line coverage, 94.82% branch coverage.** Tests run
+**166 tests, 587 assertions, 99.05% line coverage, 96.55% branch coverage** on the last
+run — `bin/rails test:all` prints the current figures, and a per-layer breakdown kept by
+hand only rots. Tests run
 in parallel across one process per core, and SimpleCov results are merged per worker —
 without that merge the report shows roughly one worker's share and every number after it
 is fiction. The 90% floor is enforced under `CI` or `COVERAGE`.
@@ -254,10 +259,13 @@ stored SVG is a stored script, and Active Storage serves attachments from this o
 Behind that sits a Content Security Policy of `default-src 'none'` with a per-response
 nonce for scripts and styles — escaping can be undone by one careless `html_safe`, a
 policy cannot. Style *attributes* are allowed, because the import progress bar's width
-is a computed value; `script-src`, which is where XSS lives, stays closed. Every system
-test fails if the browser reports a policy violation, which is how the first version of
-this policy was caught silently breaking that same progress bar. Three tests store markup in a name, a validation message and an import's row
-errors, and assert it comes back escaped.
+is a computed value; `script-src`, which is where XSS lives, stays closed. The first version of
+this policy broke that bar in the browser while twenty-one system tests stayed green —
+they asserted `aria-valuenow`, which the server had got right. It was found by opening
+the page. The teardown that fails any system test whose browser reports a policy
+violation was written in the same commit as the fix, so the next one costs a test run
+instead of a pair of eyes. Three tests store markup in a name, a validation message and
+an import's row errors, and assert it comes back escaped.
 
 **CSRF.** Rails' token protection is on and every state change goes through `form_with`
 or `button_to`. Rails disables the protection in the test environment, which means it is
@@ -277,8 +285,16 @@ exercised rather than assumed.
 **Static analysis.** Brakeman, bundler-audit and `importmap audit` run on every pull
 request and report zero findings.
 
-All of the above lives in `test/integration/security_test.rb`. Two of those tests were
-checked by removing the defence and watching them fail.
+`test/integration/security_test.rb` holds the injection, escaping, CSRF and forged-cookie
+tests. The rest sit with the code they guard: the role filter and the admin routes that
+change something in `test/controllers/admin/users_controller_test.rb`, the rate limit in
+`sessions_controller_test.rb`, session revocation in `passwords_controller_test.rb` and
+`profiles_controller_test.rb`, and the raw email column in `user_test.rb`.
+
+Every test written for a defence here was checked the same way: remove the defence, run
+the test, watch it fail. That is not a formality — the self-demotion test passed for a
+year of commits with the parameter filter deleted, because a different rule was doing
+the blocking.
 
 ---
 
@@ -392,6 +408,11 @@ Reproduce it with `script/jit_benchmark.rb`; the numbers above are from one mach
   (`SMTP_ADDRESS`, `SMTP_PORT`, credentials under `smtp:`), and the flow was exercised
   end to end against a local catcher — mail sent, link opened, password changed, old
   password rejected. A deploy still has to point it at a real mail service.
+- **The dashboard suppression is not covered by a test.** `User.suppressing_turbo_broadcasts`
+  is what stops Turbo's debounce from swallowing every refresh during a bulk import, but
+  turbo-rails debounces immediately under test, so the effect cannot be observed there.
+  The test beside it covers the pacing that replaces it — remove `DASHBOARD_EVERY` and it
+  fails; remove the suppression and it does not.
 - **The test suite does not exercise Solid Queue, Solid Cache or Solid Cable.** Jobs run
   inline, the cache is a null store and Action Cable is in-process, which is what keeps
   the suite fast and deterministic. Those three run for real in development and
