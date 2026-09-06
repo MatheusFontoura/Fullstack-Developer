@@ -127,7 +127,7 @@ the same time.
 ## Testing
 
 ```bash
-bin/rails test:all      # unit, integration and system — 154 tests
+bin/rails test:all      # unit, integration and system — 158 tests
 bin/rails test          # skips system tests
 bin/ci                  # the whole pipeline: lint, audits, Brakeman, tests, seeds
 ```
@@ -141,7 +141,7 @@ bin/ci                  # the whole pipeline: lint, audits, Brakeman, tests, see
 | System (real Chrome) | 6 | 25 |
 | Configuration | 1 | 3 |
 
-**154 tests, 549 assertions, 98.78% line coverage, 95.45% branch coverage.** Tests run
+**158 tests, 557 assertions, 98.82% line coverage, 94.82% branch coverage.** Tests run
 in parallel across one process per core, and SimpleCov results are merged per worker —
 without that merge the report shows roughly one worker's share and every number after it
 is fiction. The 90% floor is enforced under `CI` or `COVERAGE`.
@@ -285,8 +285,10 @@ checked by removing the defence and watching them fail.
 ## Cross-browser support
 
 `allow_browser versions: :modern` rejects browsers without webp, import maps, CSS
-nesting and `:has` — every current Chrome, Safari, Firefox and Edge is in, Internet
-Explorer and abandoned builds are out. That floor is what makes polyfills unnecessary.
+nesting and `:has` — in practice Chrome 120+, Safari 17.2+ and Firefox 121+. Tailwind 4
+sets a floor of its own around there, so without this an older iOS would get broken CSS
+and no explanation; `public/406-unsupported-browser.html` is that explanation. The floor
+is what makes polyfills unnecessary.
 
 Submit buttons disable and relabel themselves while a request is in flight through
 Turbo's own `data-turbo-submits-with`. A Stimulus controller did this first, until review
@@ -390,6 +392,16 @@ Reproduce it with `script/jit_benchmark.rb`; the numbers above are from one mach
   (`SMTP_ADDRESS`, `SMTP_PORT`, credentials under `smtp:`), and the flow was exercised
   end to end against a local catcher — mail sent, link opened, password changed, old
   password rejected. A deploy still has to point it at a real mail service.
+- **The test suite does not exercise Solid Queue, Solid Cache or Solid Cable.** Jobs run
+  inline, the cache is a null store and Action Cable is in-process, which is what keeps
+  the suite fast and deterministic. Those three run for real in development and
+  production against their own databases, which is where `docker compose up` puts them.
+  `test/config/solid_stack_test.rb` guards the configuration, not the behaviour.
+- **Sessions have no expiry and no pruning**, and there is no "active sessions" screen.
+  The cookie is permanent, which is what `bin/rails generate authentication` produces.
+  Changing a password does sign every other browser out.
+- **The imports list is not paginated.** The users list is; imports are few enough that
+  it has not earned it.
 - **A worker killed outright leaves its import showing "processing".** Solid Queue records
   the failure but never re-enters the job, so `retry_on` does not apply; and a manual
   retry restarts the file from the top, reporting already-imported rows as duplicates.
@@ -398,7 +410,11 @@ Reproduce it with `script/jit_benchmark.rb`; the numbers above are from one mach
 - **Development delivers mail to a local catcher.** `docker compose --profile mail up`
   starts Mailpit; the reset link is then clickable at <http://localhost:8025>. Without
   it, delivery fails quietly. Previews are at `/rails/mailers`.
-- **Counters in the import are written per row.** At a genuinely large file they would
-  batch alongside the error list; at this size the extra write buys a bar that moves.
+- **The import lists at most 200 rejected rows.** Each rejection rewrites the whole JSON
+  column and rides along in the next broadcast, so an all-bad file would grow both the
+  write cost and the message size with every row. The count keeps counting; only the
+  listed reasons stop, and the page says so. Imported people get a placeholder digest at
+  bcrypt's minimum cost — nobody authenticates with it, and the default cost was 250ms
+  per row for nothing.
 - **No background job for avatar processing**, no CDN, no fragment caching. All three
   answer a scale this application does not have.
