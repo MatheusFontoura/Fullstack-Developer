@@ -27,6 +27,27 @@ class ResponsiveTest < ApplicationSystemTestCase
     end
   end
 
+  # A pinned identity column that covers the buttons is worse than no pinned column:
+  # everything still renders, and only the destructive action stays reachable.
+  test "every action in the users table can be tapped on a phone" do
+    sign_in_as users(:admin)
+    resize_to_phone
+    visit admin_users_path
+    page.execute_script(%(document.querySelector('.table-scroll').scrollLeft = 9999))
+
+    covered = page.evaluate_script(<<~'JS')
+      [...document.querySelector("tbody tr").querySelectorAll("a, button")]
+        .filter(el => {
+          const box = el.getBoundingClientRect();
+          const front = document.elementFromPoint(box.left + box.width / 2, box.top + box.height / 2);
+          return !(front === el || el.contains(front));
+        })
+        .map(el => el.textContent.replace(/\s+/g, " ").trim());
+    JS
+
+    assert_empty covered, "these are covered by something else: #{covered.join(", ")}"
+  end
+
   private
     def resize_to_phone
       page.driver.browser.manage.window.resize_to(*PHONE)
