@@ -21,8 +21,7 @@
        aria-valuemin="0"
        aria-valuemax="100"
        aria-label="Import progress">
-    <div class="h-full rounded-full transition-[width] duration-300
-                <%= spreadsheet_import.failed? ? "bg-red-500" : "bg-brand-600" %>"
+    <div class="h-full rounded-full <%= spreadsheet_import.failed? ? "bg-red-500" : "bg-brand-600" %>"
          style="width: <%= spreadsheet_import.progress %>%"></div>
   </div>
 
