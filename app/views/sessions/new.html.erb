@@ -18,7 +18,7 @@
               maxlength: 72, placeholder: "••••••••", class: "field-input" %>
       </div>
 
-      <%= form.submit "Sign in", class: "btn-primary w-full" %>
+      <%= form.submit "Sign in", class: "btn-primary w-full", data: { turbo_submits_with: "Signing in…" } %>
     <% end %>
 
     <div class="mt-6 flex items-center justify-between text-sm">

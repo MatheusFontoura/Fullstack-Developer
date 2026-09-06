@@ -27,7 +27,9 @@
   }
 
   /* The browser's own validity state drives this; no JavaScript. */
-  .field-input:user-invalid {
+  /* A server-side error should look like the browser's own, not like a red sentence
+     under a grey box. */
+  .field-input[aria-invalid="true"], .field-input:user-invalid {
     @apply border-red-400 focus:border-red-500 focus:ring-red-100;
   }
 
