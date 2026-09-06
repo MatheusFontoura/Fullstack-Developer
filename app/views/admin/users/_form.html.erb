@@ -3,14 +3,14 @@
 
   <div>
     <%= form.label :full_name, "Full name", class: "field-label" %>
-    <%= form.text_field :full_name, **field_error_attributes(user, :full_name), required: true, autofocus: true, maxlength: 120,
+    <%= form.text_field :full_name, **field_error_attributes(user, :full_name), required: true, autofocus: true, autocomplete: "name", maxlength: 120,
           placeholder: "Ada Lovelace", class: "field-input" %>
         <%= field_error user, :full_name %>
   </div>
 
   <div>
     <%= form.label :email, class: "field-label" %>
-    <%= form.email_field :email, **field_error_attributes(user, :email), required: true, placeholder: "ada@company.com", class: "field-input" %>
+    <%= form.email_field :email, **field_error_attributes(user, :email), required: true, autocomplete: "username", placeholder: "ada@company.com", class: "field-input" %>
         <%= field_error user, :email %>
   </div>
 
