@@ -33,13 +33,13 @@
                         file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-slate-700" %>
         </div>
         <%= field_error @user, :avatar_image %>
-    <p class="field-hint">PNG, JPEG or WebP, up to 2 MB.</p>
-    <% if @user.avatar_image.attachment&.persisted? %>
-      <label class="mt-2 flex items-center gap-2 text-sm text-slate-600">
-        <%= form.check_box :remove_avatar_image, class: "rounded border-slate-300" %>
-        Remove the current avatar
-      </label>
-    <% end %>
+        <p class="field-hint">PNG, JPEG or WebP, up to 2 MB.</p>
+        <% if @user.avatar_image.attachment&.persisted? %>
+          <label class="mt-2 flex items-center gap-2 text-sm text-slate-600">
+            <%= form.check_box :remove_avatar_image, class: "rounded border-slate-300" %>
+            Remove the current avatar
+          </label>
+        <% end %>
       </div>
 
       <div class="grid gap-5 sm:grid-cols-2">
@@ -47,15 +47,15 @@
           <%= form.label :password, "New password", class: "field-label" %>
           <%= form.password_field :password, **field_error_attributes(@user, :password), autocomplete: "new-password", minlength: 8, maxlength: 72,
                 placeholder: "Your password", class: "field-input" %>
-        <%= field_error @user, :password %>
-          <p class="field-hint">Leave blank to keep your current one.</p>
+          <%= field_error @user, :password %>
+          <p class="field-hint">Leave blank to keep the current password.</p>
         </div>
 
         <div>
           <%= form.label :password_confirmation, "Confirm password", class: "field-label" %>
           <%= form.password_field :password_confirmation, **field_error_attributes(@user, :password_confirmation), autocomplete: "new-password",
                 minlength: 8, maxlength: 72, placeholder: "Your password", class: "field-input" %>
-        <%= field_error @user, :password_confirmation %>
+          <%= field_error @user, :password_confirmation %>
         </div>
       </div>
 

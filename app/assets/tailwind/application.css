@@ -55,6 +55,12 @@
     @apply py-1.5;
   }
 
+  /* A select sizes from its own box and ignores line-height, landing 5px short of a
+     text input with the same padding. */
+  select.field-input {
+    @apply h-10.5;
+  }
+
   .field-hint {
     @apply mt-1.5 text-sm text-slate-500;
   }

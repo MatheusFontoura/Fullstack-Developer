@@ -57,7 +57,10 @@
       <p class="mt-1 text-sm text-red-700">
         Check that it opens in a spreadsheet application and has a header row.
       </p>
-      <p class="mt-2 font-mono text-xs break-words text-red-600/80"><%= spreadsheet_import.failure_reason %></p>
+      <details class="mt-2">
+        <summary class="cursor-pointer text-xs text-red-700">What the parser reported</summary>
+        <p class="mt-1 font-mono text-xs break-words text-red-600/80"><%= spreadsheet_import.failure_reason %></p>
+      </details>
     </div>
   <% end %>
 
