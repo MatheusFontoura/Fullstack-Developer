@@ -113,6 +113,28 @@ class ProfilesControllerTest < ActionDispatch::IntegrationTest
     assert_equal "The only admin cannot be deleted.", flash[:alert]
   end
 
+  # Changing a password is the thing you do when you think someone else is in your
+  # account. A session that survives it makes the whole action pointless.
+  test "changing the password signs every other browser out" do
+    other = users(:member).sessions.create!
+    mine = Current.session
+
+    patch profile_path, params: {
+      user: { password: "a-new-password", password_confirmation: "a-new-password" }
+    }
+
+    assert_nil Session.find_by(id: other.id)
+    assert Session.exists?(mine.id), "the browser making the change was signed out too"
+  end
+
+  test "leaves other sessions alone when the password is untouched" do
+    other = users(:member).sessions.create!
+
+    patch profile_path, params: { user: { full_name: "Ada King" } }
+
+    assert Session.exists?(other.id)
+  end
+
   test "rejects a submission that is not nested under a user key" do
     patch profile_path, params: { full_name: "Ada King" }
 

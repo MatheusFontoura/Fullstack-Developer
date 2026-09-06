@@ -9,6 +9,7 @@ class ProfilesController < ApplicationController
 
   def update
     if @user.update(profile_params)
+      revoke_other_sessions_for @user
       redirect_to profile_path, notice: "Your profile was updated."
     else
       render :edit, status: :unprocessable_content

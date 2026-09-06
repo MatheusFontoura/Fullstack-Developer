@@ -24,6 +24,14 @@ class ApplicationController < ActionController::Base
       redirect_to home_url_for(Current.user) if authenticated?
     end
 
+    # Changing a password is what someone does when they think an account is
+    # compromised. Everything except the browser doing it has to go.
+    def revoke_other_sessions_for(user)
+      return unless user.saved_change_to_password_digest?
+
+      user.sessions.where.not(id: Current.session&.id).destroy_all
+    end
+
     def home_url_for(user)
       user.admin? ? admin_dashboard_url : profile_url
     end

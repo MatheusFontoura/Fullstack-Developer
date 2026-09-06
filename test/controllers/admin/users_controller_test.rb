@@ -99,6 +99,18 @@ class Admin::UsersControllerTest < ActionDispatch::IntegrationTest
     assert_equal "Ada Lovelace", users(:member).reload.full_name
   end
 
+  test "resetting a user's password signs them out everywhere" do
+    victim = users(:member)
+    victim.sessions.create!
+    victim.sessions.create!
+
+    patch admin_user_path(victim), params: {
+      user: { password: "a-new-password", password_confirmation: "a-new-password" }
+    }
+
+    assert_empty victim.sessions.reload
+  end
+
   test "deletes a user" do
     assert_difference -> { User.count }, -1 do
       delete admin_user_path(users(:member))
