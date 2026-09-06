@@ -53,6 +53,18 @@ gate sent the phase back rather than forward.
   entrypoint runs `db:prepare`. Found by running the image rather than only building it.
 - A content security policy added in review blocked the import bar's inline width, so it
   rendered full at every percentage while every test still passed.
+- `docker compose --profile mail up` promised a clickable reset link at :8025 and never
+  delivered one: SMTP pointed at `localhost`, which inside the web container is that
+  container. `raise_delivery_errors` is off in development, so it failed in silence.
+  Found by following this README's own instructions instead of trusting them.
+
+**What the gates did not catch.** A commit titled "cut comments that narrate the code"
+also deleted a security test — the one asserting a forged session cookie is ignored —
+and tightened `img_src`. Both changes were fine on their own; neither belonged in that
+commit, and nobody noticed the missing test until a review with no memory of writing it
+went looking. The test is back. Two further tests turned out to pass with the defence
+they named removed, because a different rule was doing the blocking. Reviewing by commit
+message is not reviewing, and a green suite says nothing about tests that cannot fail.
 
 ### A note on the hidden instructions in the brief
 
@@ -132,7 +144,7 @@ bin/rails test          # skips system tests
 bin/ci                  # the whole pipeline: lint, audits, Brakeman, tests, seeds
 ```
 
-**161 tests, 571 assertions, 98.81% line coverage, 94.82% branch coverage** on the last
+**166 tests, 587 assertions, 99.05% line coverage, 96.55% branch coverage** on the last
 run — `bin/rails test:all` prints the current figures, and a per-layer breakdown kept by
 hand only rots. Tests run
 in parallel across one process per core, and SimpleCov results are merged per worker —
