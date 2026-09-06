@@ -42,6 +42,15 @@
     </div>
   </dl>
 
+  <% if spreadsheet_import.pending? || spreadsheet_import.processing? %>
+    <p class="mt-5 text-sm text-slate-500">This page updates itself while the import runs.</p>
+  <% elsif spreadsheet_import.imported_rows.positive? %>
+    <p class="mt-5 text-sm text-slate-500">
+      Imported people have no password yet. They set one through
+      <%= link_to "the password reset flow", new_password_path, class: "text-brand-600 hover:text-brand-700" %>.
+    </p>
+  <% end %>
+
   <% if spreadsheet_import.failure_reason.present? %>
     <div class="mt-5 rounded-lg bg-red-50 px-4 py-3 ring-1 ring-inset ring-red-200">
       <p class="text-sm font-medium text-red-800">The file could not be read</p>

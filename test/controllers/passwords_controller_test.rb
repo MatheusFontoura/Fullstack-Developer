@@ -17,7 +17,7 @@ class PasswordsControllerTest < ActionDispatch::IntegrationTest
 
     follow_redirect!
 
-    assert_notice "reset instructions sent"
+    assert_notice "reset instructions are on the way"
   end
 
   test "create for an unknown user redirects but sends no mail" do
@@ -28,7 +28,7 @@ class PasswordsControllerTest < ActionDispatch::IntegrationTest
 
     follow_redirect!
 
-    assert_notice "reset instructions sent"
+    assert_notice "reset instructions are on the way"
   end
 
   test "edit" do
