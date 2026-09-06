@@ -41,7 +41,9 @@ Rails.application.configure do
   config.action_mailer.perform_caching = false
 
   # Set localhost to be used by links generated in mailer templates.
-  config.action_mailer.default_url_options = { host: "localhost", port: ENV.fetch("PORT", 3000) }
+  # Not PORT: foreman hands each process its own, and mail is delivered from the jobs
+  # process, so links would point at the worker's port instead of the web one.
+  config.action_mailer.default_url_options = { host: "localhost", port: ENV.fetch("WEB_PORT", 3000) }
 
   # Mail goes to a local catcher when one is running (`docker compose --profile mail up`),
   # so the reset link can actually be clicked. Without it, delivery is a no-op.

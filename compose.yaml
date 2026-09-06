@@ -24,6 +24,8 @@ services:
       - log:/rails/log
     environment:
       RAILS_ENV: development
+      # The port the browser reaches, so reset links in mail point somewhere real.
+      WEB_PORT: "${WEB_PORT:-3200}"
     healthcheck:
       test: [ "CMD", "curl", "-fsS", "http://localhost:3000/up" ]
       interval: 10s
