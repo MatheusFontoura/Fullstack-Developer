@@ -140,15 +140,17 @@ class SpreadsheetImportJobTest < ActiveJob::TestCase
   test "marks the import failed, records why, and re-raises when the file cannot be read" do
     import = build_import("not-an-image.txt", skip_validation: true)
 
-    assert_raises StandardError do
+    error = assert_raises StandardError do
       SpreadsheetImportJob.perform_now(import)
     end
 
     import.reload
 
+    # StandardError on its own would also accept a NoMethodError introduced right here.
+    assert_not_kind_of NameError, error
     assert_predicate import, :failed?
     # A red badge with no reason sends the admin to a jobs table to find out what broke.
-    assert_predicate import.failure_reason, :present?
+    assert_equal "#{error.class}: #{error.message}".truncate(500), import.failure_reason
   end
 
   test "reads a capitalised role as the role it obviously is" do

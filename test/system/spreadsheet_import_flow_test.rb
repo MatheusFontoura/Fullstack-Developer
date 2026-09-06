@@ -1,6 +1,6 @@
 require "application_system_test_case"
 
-class SpreadsheetImportTest < ApplicationSystemTestCase
+class SpreadsheetImportFlowTest < ApplicationSystemTestCase
   setup { sign_in_as users(:admin) }
 
   test "uploads a spreadsheet and watches it finish without reloading" do
