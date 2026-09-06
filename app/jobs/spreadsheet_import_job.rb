@@ -4,6 +4,10 @@ class SpreadsheetImportJob < ApplicationJob
 
   BROADCAST_EVERY = 10
   DASHBOARD_EVERY = 50
+  # Every rejection rewrites the whole JSON column and rides along in the next
+  # broadcast, so an all-bad file would grow both without bound. The count keeps
+  # counting past this; only the listed reasons stop.
+  MAX_ROW_ERRORS = 200
 
   def perform(spreadsheet_import)
     @import = spreadsheet_import
@@ -72,7 +76,9 @@ class SpreadsheetImportJob < ApplicationJob
 
     # A bad row is rejected and counted; it never aborts the run.
     def record_row(attributes, line)
-      user = User.new(attributes.merge(password: SecureRandom.base58(24)))
+      # A placeholder nobody authenticates with, replaced at the first password reset.
+      # The default cost buys nothing against 140 bits of entropy and costs 250ms a row.
+      user = User.new(attributes.merge(password_digest: placeholder_digest))
       user.role = :user unless User.roles.key?(attributes[:role])
 
       if user.save
@@ -85,8 +91,14 @@ class SpreadsheetImportJob < ApplicationJob
       reject_row(line, "Email has already been taken")
     end
 
+    def placeholder_digest
+      BCrypt::Password.create(SecureRandom.base58(24), cost: BCrypt::Engine::MIN_COST)
+    end
+
     def reject_row(line, message)
       SpreadsheetImport.update_counters(@import.id, processed_rows: 1, failed_rows: 1)
+      return if @row_errors.size >= MAX_ROW_ERRORS
+
       @row_errors << { "line" => line, "message" => message }
       # Written now, not with the next batch: an interruption would lose the reason.
       persist
