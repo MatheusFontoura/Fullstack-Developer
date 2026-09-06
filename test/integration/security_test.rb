@@ -53,7 +53,8 @@ class SecurityTest < ActionDispatch::IntegrationTest
     assert_select "td", text: /Ada Lovelace/, count: 0
   end
 
-  # Every one of these returned 500 before. A malformed request is a 4xx.
+  # params.expect guarantees the envelope, not that the fields inside it are filled. A
+  # malformed request is a 4xx, never a 500.
   test "answers a half-filled login without raising" do
     post session_path, params: { session: { email: users(:member).email } }
 

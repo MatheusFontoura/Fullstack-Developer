@@ -23,7 +23,7 @@ class SpreadsheetImport
     def each_row
       header = normalized_header
       # A file exported with ";" separators parses as one column, and one without an
-      # email column imports nothing. Both used to finish as a silent 0 of 0.
+      # email column imports nothing. Either would otherwise report a successful 0 of 0.
       unless header.include?(:email)
         raise ArgumentError, "the file has no `email` column (found: #{header.join(", ")})"
       end

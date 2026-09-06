@@ -1,7 +1,5 @@
-<% messages = local_assigns.fetch(:messages, flash) %>
-
-<div id="flash" class="<%= "mb-6 space-y-3" if messages.any? %>">
-  <% messages.each do |type, message| %>
+<div id="flash" class="<%= "mb-6 space-y-3" if flash.any? %>">
+  <% flash.each do |type, message| %>
     <%= tag.p message,
           id: type,
           role: (type == "alert" ? "alert" : "status"),

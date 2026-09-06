@@ -48,7 +48,8 @@ module Admin
         @user = User.find(params[:id])
       end
 
-      # The only place :role is permitted, and not for yourself.
+      # The only place a request is allowed to name :role, and not for yourself. The
+      # import reads it from the spreadsheet instead.
       def user_params
         permitted = without_untouched_fields params.expect(
           user: [ :full_name, :email, :role, :password, :password_confirmation, :avatar_image, :remove_avatar_image ]

@@ -129,10 +129,15 @@ class Admin::UsersControllerTest < ActionDispatch::IntegrationTest
     assert_no_match "evil.example", response.body
   end
 
+  # url_for only runs when there are pagination links to build, so without the rows this
+  # asserted nothing.
   test "does not let a query parameter reach the router" do
+    30.times { |i| User.create!(full_name: "Person #{i}", email: "r#{i}@umanni.test", password: "secret-password") }
+
     get "/admin/users?controller=sessions&action=new&page=1"
 
     assert_response :success
+    assert_select "nav[aria-label=Pagination] a"
   end
 
   # A second admin, or the last-admin invariant is what blocks this and the test says
