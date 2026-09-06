@@ -32,6 +32,24 @@ class ResponsiveTest < ApplicationSystemTestCase
     end
   end
 
+  # truncate does nothing without a width to truncate to: the cell grew to the length of
+  # the name and pushed every column after it off the screen, buttons included.
+  test "a name at the length limit does not widen the table" do
+    User.create!(full_name: "A" * 120, email: "long@umanni.test",
+                 password: "secret-password", password_confirmation: "secret-password")
+    sign_in_as users(:admin)
+    resize_to_phone
+    visit admin_users_path(query: "AAAA")
+
+    assert_no_horizontal_overflow admin_users_path
+
+    clipped = page.evaluate_script(<<~'JS')
+      (() => { const p = document.querySelector("tbody tr p"); return p.scrollWidth > p.clientWidth; })()
+    JS
+
+    assert clipped, "the name was not truncated, so the cell grew to fit it"
+  end
+
   # A pinned identity column that covers the buttons is worse than no pinned column:
   # everything still renders, and only the destructive action stays reachable.
   test "every action in the users table can be tapped on a phone" do
