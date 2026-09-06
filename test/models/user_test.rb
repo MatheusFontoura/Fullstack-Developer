@@ -147,6 +147,13 @@ class UserTest < ActiveSupport::TestCase
     assert_empty User.matching("_").where.not(full_name: "100% Real_Name")
   end
 
+  test "trims the padding off a name" do
+    user = build(full_name: "  Katherine Johnson  ")
+    user.save!
+
+    assert_equal "Katherine Johnson", user.reload.full_name
+  end
+
   private
     def only_admin
       User.admin.where.not(id: users(:admin).id).destroy_all

@@ -23,6 +23,7 @@ class User < ApplicationRecord
   broadcasts_refreshes_to ->(_user) { DASHBOARD_STREAM }
 
   normalizes :email, with: ->(email) { email.strip.downcase }
+  normalizes :full_name, with: ->(name) { name.strip }
 
   validates :full_name, presence: true, length: { maximum: 120 }
   validates :email, presence: true, uniqueness: true, format: { with: URI::MailTo::EMAIL_REGEXP }
