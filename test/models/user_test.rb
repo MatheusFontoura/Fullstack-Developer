@@ -136,6 +136,17 @@ class UserTest < ActiveSupport::TestCase
     end
   end
 
+  # Two halves have to be right at once: sanitize_sql_like escapes the wildcards, and
+  # ESCAPE tells LIKE what the escape character is. Drop the first and "_" matches every
+  # name; drop the second and nobody can search for a name that contains one.
+  test "finds a name that contains LIKE wildcards, and treats a bare wildcard as text" do
+    build(full_name: "100% Real_Name", email: "percent@umanni.test").save!
+
+    assert_equal [ "100% Real_Name" ], User.matching("Real_Name").pluck(:full_name)
+    assert_equal [ "100% Real_Name" ], User.matching("100%").pluck(:full_name)
+    assert_empty User.matching("_").where.not(full_name: "100% Real_Name")
+  end
+
   private
     def only_admin
       User.admin.where.not(id: users(:admin).id).destroy_all
