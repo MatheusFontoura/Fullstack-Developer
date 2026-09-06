@@ -28,6 +28,10 @@ class SpreadsheetImport < ApplicationRecord
     processed_rows - failed_rows
   end
 
+  def unlisted_failures
+    failed_rows - row_errors.size
+  end
+
   private
     def file_must_be_a_spreadsheet
       return errors.add(:file, "must be attached") unless file.attached?

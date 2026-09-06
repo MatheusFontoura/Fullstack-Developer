@@ -119,6 +119,24 @@ class SpreadsheetImportJobTest < ActiveJob::TestCase
     path&.delete
   end
 
+  # An all-bad file would otherwise rewrite an ever-growing JSON column once per row
+  # and carry the whole list in every broadcast.
+  test "stops listing reasons past the cap but keeps counting" do
+    cap = SpreadsheetImportJob::MAX_ROW_ERRORS
+    path = Rails.root.join("tmp", "many-bad-#{SecureRandom.hex(4)}.csv")
+    path.write((%w[full_name,email,role] + Array.new(cap + 20) { ",,user" }).join("\n"))
+    import = users(:admin).spreadsheet_imports.create!(file: { io: path.open, filename: "bad.csv" })
+
+    SpreadsheetImportJob.perform_now(import)
+    import.reload
+
+    assert_equal cap + 20, import.failed_rows
+    assert_equal cap, import.row_errors.size
+    assert_equal 20, import.unlisted_failures
+  ensure
+    path&.delete
+  end
+
   test "marks the import failed, records why, and re-raises when the file cannot be read" do
     import = build_import("not-an-image.txt", skip_validation: true)
 

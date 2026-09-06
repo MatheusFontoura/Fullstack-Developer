@@ -27,6 +27,7 @@ module Admin
 
     def update
       if @user.update(user_params)
+        revoke_other_sessions_for @user
         redirect_to admin_users_path, notice: "#{@user.full_name} was updated."
       else
         render :edit, status: :unprocessable_content
