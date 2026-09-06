@@ -19,11 +19,17 @@
      than the phone says so. The local/scroll attachment pair is what makes it react. */
   .table-scroll {
     @apply overflow-x-auto;
-    background:
-      linear-gradient(to right, var(--color-white), transparent) left / 20px 100% no-repeat local,
-      linear-gradient(to left, var(--color-white), transparent) right / 20px 100% no-repeat local,
-      linear-gradient(to right, rgb(15 23 42 / 0.10), transparent) left / 10px 100% no-repeat scroll,
-      linear-gradient(to left, rgb(15 23 42 / 0.10), transparent) right / 10px 100% no-repeat scroll;
+    /* Longhands, not the background shorthand: that one resets background-color and
+       would strip the white surface off the .card this always sits on. */
+    background-image:
+      linear-gradient(to right, var(--color-white), transparent),
+      linear-gradient(to left, var(--color-white), transparent),
+      linear-gradient(to right, rgb(15 23 42 / 0.10), transparent),
+      linear-gradient(to left, rgb(15 23 42 / 0.10), transparent);
+    background-position: left, right, left, right;
+    background-size: 20px 100%, 20px 100%, 10px 100%, 10px 100%;
+    background-repeat: no-repeat;
+    background-attachment: local, local, scroll, scroll;
   }
 
   .field-label {
