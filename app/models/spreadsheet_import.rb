@@ -40,6 +40,8 @@ class SpreadsheetImport < ApplicationRecord
         errors.add(:file, "must be a .csv or .xlsx file")
       end
 
+      errors.add(:file, "is empty") if file.byte_size.zero?
+
       errors.add(:file, "must be under #{MAX_FILE_SIZE / 1.megabyte} MB") if file.byte_size > MAX_FILE_SIZE
     end
 end
