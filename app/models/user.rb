@@ -43,7 +43,10 @@ class User < ApplicationRecord
     if term.include?("@")
       where(email: term.downcase)
     else
-      where("full_name LIKE ?", "%#{sanitize_sql_like(term)}%")
+      # sanitize_sql_like escapes with a backslash, which means nothing to LIKE unless
+      # the clause names it: without ESCAPE, a search for "100%" looks for a literal
+      # backslash and finds nobody.
+      where("full_name LIKE ? ESCAPE '\\'", "%#{sanitize_sql_like(term)}%")
     end
   }
 

@@ -20,6 +20,16 @@ class SpreadsheetImportTest < ActiveSupport::TestCase
     assert_includes import.errors[:file], "must be a .csv or .xlsx file"
   end
 
+  # It failed inside the job instead, and a job that finishes before the browser has
+  # subscribed to the stream leaves the page showing "Pending" until a reload.
+  test "rejects a file with nothing in it" do
+    import = build
+    import.file.attach(io: StringIO.new(""), filename: "empty.csv")
+
+    assert_predicate import, :invalid?
+    assert_includes import.errors[:file], "is empty"
+  end
+
   # The bar reads this before the job has counted anything.
   test "reports no progress before the row count is known" do
     assert_equal 0, build.progress

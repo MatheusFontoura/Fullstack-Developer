@@ -5,7 +5,7 @@
   <td class="bg-white px-4 py-3 group-hover:bg-slate-50 sm:sticky sm:left-0 sm:z-10">
     <div class="flex items-center gap-3">
       <%= render "shared/avatar", user: user %>
-      <div class="min-w-0">
+      <div class="min-w-0 max-w-64">
         <p class="truncate font-medium text-slate-900"><%= user.full_name %></p>
         <p class="truncate text-sm text-slate-500"><%= user.email %></p>
       </div>
