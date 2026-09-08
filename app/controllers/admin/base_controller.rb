@@ -1,6 +1,4 @@
 module Admin
-  # Every admin screen inherits from here, so authorisation is a property of the
-  # namespace rather than something each controller has to remember to declare.
   class BaseController < ApplicationController
     before_action :require_admin
 

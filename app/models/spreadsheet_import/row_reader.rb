@@ -18,8 +18,6 @@ class SpreadsheetImport
       count
     end
 
-    # Yields each data row's attributes with its line number in the file, so an error
-    # can point the admin at a row they can actually find.
     def each_row
       header = normalized_header
       # A file exported with ";" separators parses as one column, and one without an
@@ -43,8 +41,6 @@ class SpreadsheetImport
 
       def attributes_from(header, cells)
         attributes = header.zip(cells.map { |cell| cell.to_s.strip.presence }).to_h.slice(*COLUMNS)
-        # "Admin" typed into Excel is the same role as "admin". Lowercasing here rather
-        # than in the job keeps every value the reader hands out already normalised.
         attributes[:role] = attributes[:role]&.downcase
         attributes
       end

@@ -26,7 +26,6 @@ class ProfilesController < ApplicationController
   end
 
   private
-    # No id in the route, so there is nothing to tamper with.
     def set_profile
       @user = Current.user
     end

@@ -101,8 +101,6 @@ class SecurityTest < ActionDispatch::IntegrationTest
     end
   end
 
-  # The cookie carries a row id. Unsigned, it would be an invitation to type someone
-  # else's.
   test "ignores a session cookie this application did not sign" do
     sign_out
     cookies[:session_id] = users(:admin).sessions.create!.id

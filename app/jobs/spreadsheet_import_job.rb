@@ -27,8 +27,6 @@ class SpreadsheetImportJob < ApplicationJob
     end
   # Continuation::Interrupt is an Exception, so it passes through this rescue.
   rescue StandardError => error
-    # The reason belongs on the record. Otherwise the admin sees a red badge and has to
-    # be told to go read a jobs table to find out what went wrong.
     @import.update(status: :failed, failure_reason: "#{error.class}: #{error.message}".truncate(500))
     broadcast_progress
     broadcast_dashboard
@@ -74,7 +72,6 @@ class SpreadsheetImportJob < ApplicationJob
       broadcast_dashboard if (processed % DASHBOARD_EVERY).zero?
     end
 
-    # A bad row is rejected and counted; it never aborts the run.
     def record_row(attributes, line)
       # A placeholder nobody authenticates with, replaced at the first password reset.
       # The default cost buys nothing against 140 bits of entropy and costs 250ms a row.

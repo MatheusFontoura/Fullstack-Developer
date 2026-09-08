@@ -1,7 +1,4 @@
 <tr id="<%= dom_id(user) %>" class="group hover:bg-slate-50">
-  <%# Sticky from sm up only. On a phone the identity column and three buttons do not
-      both fit, and pinning it puts the actions underneath it. The delete dialog names
-      the person, so scrolling the name away costs nothing. %>
   <td class="bg-white px-4 py-3 group-hover:bg-slate-50 sm:sticky sm:left-0 sm:z-10">
     <div class="flex items-center gap-3">
       <%= render "shared/avatar", user: user %>
