@@ -1,8 +1,5 @@
 # Offset pagination without a gem and without a COUNT query: one extra row is fetched
 # beyond the page, and its presence is what answers "is there a next page".
-#
-# At this scale that is the whole requirement. A list that needed page numbers, jump
-# links or a total count would be the point to bring in Pagy and stop hand-rolling.
 class Pagination
   PER_PAGE = 25
   # An OFFSET beyond this is a malformed request, not a page someone wants.

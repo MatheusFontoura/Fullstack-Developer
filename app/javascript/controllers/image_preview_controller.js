@@ -1,6 +1,5 @@
 import { Controller } from "@hotwired/stimulus"
 
-// Shows the picked image before it is uploaded.
 export default class extends Controller {
   static targets = ["input", "preview", "current"]
 

@@ -23,8 +23,6 @@ class ProfilesControllerTest < ActionDispatch::IntegrationTest
     assert_equal "Ada King", users(:member).reload.full_name
   end
 
-  # The route has no id, so there is nothing to tamper with: a user cannot request
-  # someone else's profile by changing a number. This asserts that stays true.
   test "always acts on the signed in user, never another one" do
     patch profile_path, params: { user: { full_name: "Ada King" } }
 
@@ -113,8 +111,6 @@ class ProfilesControllerTest < ActionDispatch::IntegrationTest
     assert_equal "The only admin cannot be deleted.", flash[:alert]
   end
 
-  # Changing a password is the thing you do when you think someone else is in your
-  # account. A session that survives it makes the whole action pointless.
   test "changing the password signs every other browser out" do
     other = users(:member).sessions.create!
     mine = Current.session

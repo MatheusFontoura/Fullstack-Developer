@@ -23,10 +23,8 @@ class SessionsController < ApplicationController
   end
 
   private
-    # expect, not permit: a login attempt has exactly one shape, and anything else is
-    # a malformed request rather than a wrong password.
-    # expect guarantees the envelope, not that the fields inside it are filled, and
-    # authenticate_by raises on a missing one. A half-filled form is a failed login.
+    # authenticate_by raises when a key is missing, so a half-filled form has to be a
+    # failed login rather than a 500.
     def authenticate
       credentials = params.expect(session: [ :email, :password ])
       return if credentials[:email].blank? || credentials[:password].blank?

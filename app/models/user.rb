@@ -19,7 +19,6 @@ class User < ApplicationRecord
 
   # A lambda, not the bare symbol: the macro calls `send` on the record for anything
   # that does not respond to `call`, so `:dashboard` would look for User#dashboard.
-  # SpreadsheetImportJob suppresses this during bulk writes; the note is there.
   broadcasts_refreshes_to ->(_user) { DASHBOARD_STREAM }
 
   normalizes :email, with: ->(email) { email.strip.downcase }
@@ -38,7 +37,6 @@ class User < ApplicationRecord
   before_destroy :last_admin_is_not_deletable, prepend: true
 
   scope :ordered, -> { order(:full_name, :id) }
-  # An exact email still matches under deterministic encryption; a partial one cannot.
   scope :matching, ->(term) {
     term = term.to_s.strip
     if term.include?("@")

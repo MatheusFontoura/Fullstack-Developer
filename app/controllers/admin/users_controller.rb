@@ -48,8 +48,6 @@ module Admin
         @user = User.find(params[:id])
       end
 
-      # The only place a request is allowed to name :role, and not for yourself. The
-      # import reads it from the spreadsheet instead.
       def user_params
         permitted = without_untouched_fields params.expect(
           user: [ :full_name, :email, :role, :password, :password_confirmation, :avatar_image, :remove_avatar_image ]
@@ -58,11 +56,8 @@ module Admin
       end
 
       def filtered_users
-        # Without the eager load this costs one attachment query per row rendered.
         scope = User.with_attached_avatar_image
         scope = scope.matching(params[:query]) if params[:query].present?
-        # Checked against the enum rather than passed through, so a crafted role
-        # parameter cannot reach the query.
         scope = scope.where(role: params[:role]) if User.roles.key?(params[:role])
         scope
       end

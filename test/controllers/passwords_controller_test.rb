@@ -47,8 +47,6 @@ class PasswordsControllerTest < ActionDispatch::IntegrationTest
     assert_notice "reset link is invalid"
   end
 
-  # A reset is what someone does when they have lost control of the account, so every
-  # browser holding a session has to go — including the one asking.
   test "resetting the password signs every browser out" do
     @user.sessions.create!
     @user.sessions.create!

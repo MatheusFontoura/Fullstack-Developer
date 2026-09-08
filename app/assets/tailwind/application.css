@@ -1,7 +1,5 @@
 @import "tailwindcss";
 
-/* Small component layer; anything used once stays inline. */
-
 @theme {
   --color-brand-50: oklch(0.97 0.014 254.6);
   --color-brand-100: oklch(0.93 0.032 255.6);
@@ -43,7 +41,6 @@
            disabled:bg-slate-50 disabled:text-slate-500;
   }
 
-  /* The browser's own validity state drives this; no JavaScript. */
   /* A server-side error should look like the browser's own, not like a red sentence
      under a grey box. */
   .field-input[aria-invalid="true"], .field-input:user-invalid {
@@ -97,7 +94,6 @@
            ring-1 ring-inset;
   }
 
-  /* Role. Admin has to read as different at a glance, not on inspection. */
   .badge-admin {
     @apply bg-brand-100 text-brand-700 ring-brand-500/30;
   }
@@ -106,7 +102,6 @@
     @apply bg-slate-100 text-slate-600 ring-slate-300;
   }
 
-  /* Status. A finished import and a running one were the same grey. */
   .badge-neutral {
     @apply bg-slate-100 text-slate-600 ring-slate-300;
   }
