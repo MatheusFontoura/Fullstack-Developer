@@ -12,7 +12,7 @@ class ApplicationController < ActionController::Base
     end
 
     def redirect_if_authenticated
-      redirect_to home_url_for(Current.user) if authenticated?
+      redirect_to home_url_for(Current.user), status: :see_other if authenticated?
     end
 
     def revoke_other_sessions_for(user)

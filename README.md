@@ -144,7 +144,7 @@ bin/rails test          # skips system tests
 bin/ci                  # the whole pipeline: lint, audits, Brakeman, tests, seeds
 ```
 
-**169 tests, 602 assertions, 99.05% line coverage, 96.61% branch coverage** on the last
+**171 tests, 604 assertions, 99.05% line coverage, 96.61% branch coverage** on the last
 run — `bin/rails test:all` prints the current figures, and a per-layer breakdown kept by
 hand only rots. Tests run
 in parallel across one process per core, and SimpleCov results are merged per worker —
@@ -272,6 +272,13 @@ an import's row errors, and assert it comes back escaped.
 or `button_to`. Rails disables the protection in the test environment, which means it is
 normally never exercised, so one test turns it back on and asserts a token-less POST
 creates nothing.
+
+**Refusals do not carry the method.** Every guard redirect answers `303 See Other`
+rather than the default `302`. A client that follows a 302 keeps the request method, so
+a `DELETE` on an admin route that the guard refused arrived at the redirect target as
+another `DELETE` — and `/profile` answers `DELETE` by deleting the account of whoever
+asked. Reproduced with `fetch(..., { method: "DELETE", redirect: "follow" })` against
+the running application, and the account was gone. A test asserts the status.
 
 **Mass assignment.** `params.expect` everywhere rather than `params.permit` — a request
 that is not shaped like the form is a 400 rather than something quietly filtered to an
