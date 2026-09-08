@@ -249,7 +249,8 @@ encryption. A test reads the raw column and asserts the address is not in it.
 
 **SQL injection.** Every query goes through Active Record with bound parameters. The two
 places user input reaches a query are covered directly: search escapes its term with
-`sanitize_sql_like` before binding, and the role filter is checked against
+`sanitize_sql_like` and names the escape character in the clause — `ESCAPE` is not
+optional, and without it the escaping is inert — and the role filter is checked against
 `User.roles.key?` rather than passed through — there is a test that sends
 `'; DROP TABLE users; --` as a role and asserts the page renders normally.
 

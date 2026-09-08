@@ -82,10 +82,12 @@
 - Conventional Commits in English (`feat:`, `fix:`, `test:`, `chore:`, `ci:`, `refactor:`), with a body that explains
   the decision. Default branch is `master`.
 - `params.expect`, not `permit`, in every controller that takes a form.
-- `:role` is permitted only in `Admin::UsersController#user_params`. Self-registration never accepts it.
+- `:role` is the only attribute a request may name in `Admin::UsersController#user_params` and nowhere else;
+  self-registration and the profile never accept it. The import reads the role from the spreadsheet instead.
 - Admin search is `User.matching`: an exact email when the term contains `@` (deterministic encryption allows it),
-  otherwise `full_name LIKE`, escaped with `sanitize_sql_like`. Role filter is checked against `User.roles` before it
-  reaches the query.
+  otherwise `full_name LIKE ... ESCAPE`, with the term escaped by `sanitize_sql_like`. The `ESCAPE` clause is what
+  makes that escaping mean anything: without it the backslash is a literal, `_` stays a wildcard, and nobody can
+  search for a name containing `%` or `_`. Role filter is checked against `User.roles` before it reaches the query.
 - RuboCop: omakase plus a stricter layer (`.rubocop.yml`: metrics ceilings, Rails cops, Minitest and Performance
   plugins, line length 120). Run `bin/rubocop -A` after editing Ruby.
 - Error responses render with `status: :unprocessable_content`; destroy redirects use `status: :see_other`.
