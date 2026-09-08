@@ -273,6 +273,13 @@ or `button_to`. Rails disables the protection in the test environment, which mea
 normally never exercised, so one test turns it back on and asserts a token-less POST
 creates nothing.
 
+**Refusals do not carry the method.** Every guard redirect answers `303 See Other`
+rather than the default `302`. A client that follows a 302 keeps the request method, so
+a `DELETE` on an admin route that the guard refused arrived at the redirect target as
+another `DELETE` — and `/profile` answers `DELETE` by deleting the account of whoever
+asked. Reproduced with `fetch(..., { method: "DELETE", redirect: "follow" })` against
+the running application, and the account was gone. A test asserts the status.
+
 **Mass assignment.** `params.expect` everywhere rather than `params.permit` — a request
 that is not shaped like the form is a 400 rather than something quietly filtered to an
 empty hash. `:role` appears in exactly one permitted list, in the admin namespace. Both

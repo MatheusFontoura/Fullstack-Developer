@@ -152,6 +152,18 @@ class Admin::UsersControllerTest < ActionDispatch::IntegrationTest
     assert_equal "Grace B. Hopper", users(:admin).reload.full_name
   end
 
+  # A client that follows a 302 keeps the method. Refusing a DELETE with one sent the
+  # same DELETE to the redirect target, and /profile answers DELETE by deleting the
+  # account of whoever asked.
+  test "a refusal does not hand a destructive method to the redirect target" do
+    sign_out
+    sign_in_as users(:member)
+
+    delete admin_user_path(users(:admin))
+
+    assert_response :see_other
+  end
+
   test "every route that changes something is closed to a plain user" do
     sign_out
     sign_in_as users(:member)
