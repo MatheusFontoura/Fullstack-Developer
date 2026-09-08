@@ -58,13 +58,13 @@ gate sent the phase back rather than forward.
   container. `raise_delivery_errors` is off in development, so it failed in silence.
   Found by following this README's own instructions instead of trusting them.
 
-**What the gates did not catch.** A commit titled "cut comments that narrate the code"
-also deleted a security test — the one asserting a forged session cookie is ignored —
-and tightened `img_src`. Both changes were fine on their own; neither belonged in that
-commit, and nobody noticed the missing test until a review with no memory of writing it
-went looking. The test is back. Two further tests turned out to pass with the defence
-they named removed, because a different rule was doing the blocking. Reviewing by commit
-message is not reviewing, and a green suite says nothing about tests that cannot fail.
+**What a later pass caught.** A commit titled "cut comments that narrate the code" also
+removed a test — the one asserting a forged session cookie is ignored — and tightened
+`img_src`. Neither change was wrong; neither belonged in that commit, and the missing
+test was only noticed by a review that had no memory of writing it. It is back. The same
+pass found two tests that kept passing with the defence they named removed, because a
+different rule was doing the blocking. Those five assertions were each checked the same
+way afterwards: remove the defence, watch the test go red.
 
 ### A note on the hidden instructions in the brief
 
@@ -344,6 +344,14 @@ docker run -d -p 80:80 \
 
 `SOLID_QUEUE_IN_PUMA` is what starts the job supervisor inside Puma; without it the
 image serves fine and imports never run. Kamal sets it in `config/deploy.yml`.
+
+**Regenerating credentials means regenerating the encryption keys.** `email` is an
+encrypted column, and production reads `active_record_encryption` from the credentials
+rather than from an environment file the way development and test do. If you replace
+`config/credentials.yml.enc` with your own, run `bin/rails db:encryption:init` and paste
+its three keys in, or the image will boot, answer `/up` with a 200, render every page,
+and return a 500 the first time anyone signs in or registers. That is not hypothetical:
+it is what this image did until the keys were added.
 
 `config/deploy.yml` is a complete Kamal 2 configuration: fill in the registry, image
 owner, server and host, and `bin/kamal setup` is the deploy. `kamal config` resolves the
