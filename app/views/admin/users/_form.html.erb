@@ -47,7 +47,7 @@
 
   <div class="grid gap-5 sm:grid-cols-2">
     <div>
-      <%= form.label :password, class: "field-label" %>
+      <%= form.label :password, user.persisted? ? "New password" : "Password", class: "field-label" %>
       <%= form.password_field :password, **field_error_attributes(user, :password), autocomplete: "new-password", minlength: 8, maxlength: 72,
             placeholder: "Your password", class: "field-input" %>
       <%= field_error user, :password %>
