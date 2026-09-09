@@ -12,19 +12,23 @@ SQLite in WAL mode, Solid Queue, Solid Cache and Solid Cable. No Redis, no Postg
 
 **Models used: Claude Opus 5 and Claude Fable 5.1, through Claude Code.**
 
-**What the models did.** Opus 5 wrote the application code, the tests, the commit
-messages and this README. Fable 5.1 ran two isolated research tasks: surveying my
-previous take-home repositories for conventions worth carrying forward, and drafting
-`CLAUDE.md`. Sub-agents drove Playwright against the running application to test the UI
-and reported back; they had no write access to the codebase.
+**How it was built.** Through the Claude workflow I use for real work, not a prompt and
+a paste: requirements broken into phases, one branch and one PR per phase, and a gate at
+the end of each that the phase had to clear before it moved. Opus 5 carried the
+implementation and the reviews. Fable 5.1 did the planning, drafted `CLAUDE.md`,
+surveyed my previous take-home repositories for conventions worth keeping, and ran the
+adversarial passes — evaluating the delivery against the brief with no memory of having
+written it, which is how most of the defects listed below were found. Sub-agents drove
+Playwright against the running application and reported back; none of them had write
+access to the codebase.
 
-**What I did.** I chose the architecture and made every decision the work branched on:
-Hotwire over Inertia/React, Minitest over RSpec, SQLite over PostgreSQL, one PR per
-phase, and how to handle the point below. I set the standards the code was held to and
-rejected work that missed them. Nothing was merged on the model's say-so — every phase
-had to pass a real gate before it moved: the full suite green, RuboCop and Brakeman
-clean, the production image actually built and run, and the flow actually clicked
-through in a browser.
+**What I did.** I directed the work and stayed inside it. The architecture and every
+decision the work branched on are mine: Hotwire over Inertia/React, Minitest over RSpec,
+SQLite over PostgreSQL, one PR per phase, and how to handle the point below. I set the
+standards the code was held to, read the work against them, sent back what missed, and
+decided what shipped. Nothing merged on a model's say-so — a phase moved only on a real
+gate: the full suite green, RuboCop and Brakeman clean, the production image built and
+exercised, and the flow actually clicked through in a browser.
 
 **The workflow.** The work ran in phases, each on its own branch with its own PR:
 skeleton → authentication → admin CRUD → live dashboard → import → profile → delivery.
