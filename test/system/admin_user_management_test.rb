@@ -44,13 +44,15 @@ class AdminUserManagementTest < ApplicationSystemTestCase
   end
 
   test "toggles a role in place, without a full page load" do
+    fill_in "Search by name", with: "typed but not submitted"
     row = find("tr", text: "Ada Lovelace")
 
     within(row) { click_on "Make admin" }
 
     assert_text "Ada Lovelace is now an admin."
     within("tr", text: "Ada Lovelace") { assert_text "Admin" }
-    assert_field "Search by name", with: ""
+    # A reload would have emptied this.
+    assert_field "Search by name", with: "typed but not submitted"
   end
 
   test "does not offer role or delete controls for the signed in admin" do

@@ -110,6 +110,17 @@ class Admin::UsersControllerTest < ActionDispatch::IntegrationTest
     assert_empty victim.sessions.reload
   end
 
+  test "deletes an admin while another one remains" do
+    doomed = User.create!(full_name: "Katherine Johnson", email: "katherine@umanni.test",
+                          password: "secret-password", password_confirmation: "secret-password", role: "admin")
+
+    assert_difference -> { User.admin.count }, -1 do
+      delete admin_user_path(doomed)
+    end
+
+    assert_redirected_to admin_users_path
+  end
+
   test "deletes a user" do
     assert_difference -> { User.count }, -1 do
       delete admin_user_path(users(:member))

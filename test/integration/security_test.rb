@@ -51,6 +51,7 @@ class SecurityTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_select "td", text: /Ada Lovelace/, count: 0
+    assert_predicate User, :any?, "the users table did not survive the term"
   end
 
   # params.expect guarantees the envelope, not that the fields inside it are filled. A

@@ -24,6 +24,7 @@ class Admin::Users::RolesControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_match "turbo-stream", response.media_type
     assert_match dom_id(users(:member)), response.body
+    assert_no_match dom_id(users(:admin)), response.body
   end
 
   test "refuses to change the signed in admin's own role" do

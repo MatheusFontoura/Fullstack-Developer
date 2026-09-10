@@ -51,14 +51,27 @@ class SpreadsheetImportJobTest < ActiveJob::TestCase
     assert_predicate User.find_by(email: "mary@umanni.test"), :user?
   end
 
+  # Comparing the two digests proves nothing: bcrypt salts every call, so the same
+  # password twice still yields different digests. Watch what the password is drawn from.
   test "gives imported people an unguessable password rather than a shared one" do
     import = build_import("users.csv")
+    drawn = []
+    original = SecureRandom.method(:base58)
+    SecureRandom.define_singleton_method(:base58) { |n = 16| original.call(n).tap { |value| drawn << value } }
 
-    SpreadsheetImportJob.perform_now(import)
+    begin
+      SpreadsheetImportJob.perform_now(import)
+    ensure
+      SecureRandom.define_singleton_method(:base58, original)
+    end
 
-    digests = User.where(email: %w[ katherine@umanni.test dorothy@umanni.test ]).pluck(:password_digest)
+    katherine = User.find_by(email: "katherine@umanni.test")
+    dorothy = User.find_by(email: "dorothy@umanni.test")
+    hers = drawn.find { |value| katherine.authenticate(value) }
+    theirs = drawn.find { |value| dorothy.authenticate(value) }
 
-    assert_equal 2, digests.uniq.size
+    assert hers, "no freshly drawn value opens the account, so the password came from somewhere else"
+    assert_not_equal hers, theirs, "two imported people were given the same password"
   end
 
   # Without the cursor, a restarted worker replays imported rows as duplicate emails.

@@ -44,7 +44,7 @@
 - Pragmas are explicit: `journal_mode: wal`, `synchronous: normal`, `foreign_keys: true`, `mmap_size`,
   `journal_size_limit`, `cache_size`.
 - `config/cache.yml` and `config/cable.yml` name their database in development and production; `cable.yml` uses
-  `async` in test. `test/config/solid_stack_test.rb` asserts this stays true.
+  `async` in test. `test/config/solid_stack_test.rb` asserts the development and production halves stay true.
 - Schema files: `db/schema.rb`, `db/cache_schema.rb`, `db/queue_schema.rb`, `db/cable_schema.rb`.
 
 ## Running it
@@ -79,10 +79,10 @@
 
 ## Conventions
 
-- Conventional Commits in English (`feat:`, `fix:`, `test:`, `chore:`, `ci:`, `refactor:`), with a body that explains
-  the decision. Default branch is `master`.
+- Conventional Commits in English (`feat:`, `fix:`, `test:`, `chore:`, `ci:`, `refactor:`). Anything that took a
+  decision carries a body explaining it. Default branch is `master`.
 - `params.expect`, not `permit`, in every controller that takes a form.
-- `:role` is the only attribute a request may name in `Admin::UsersController#user_params` and nowhere else;
+- `:role` is permitted in `Admin::UsersController#user_params` and nowhere else;
   self-registration and the profile never accept it. The import reads the role from the spreadsheet instead.
 - Admin search is `User.matching`: an exact email when the term contains `@` (deterministic encryption allows it),
   otherwise `full_name LIKE ... ESCAPE`, with the term escaped by `sanitize_sql_like`. The `ESCAPE` clause is what

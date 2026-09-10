@@ -148,7 +148,7 @@ bin/rails test          # skips system tests
 bin/ci                  # the whole pipeline: lint, audits, Brakeman, tests, seeds
 ```
 
-**171 tests, 604 assertions, 99.05% line coverage, 96.61% branch coverage** on the last
+**177 tests, 623 assertions, 99.77% line coverage, 97.54% branch coverage** on the last
 run — `bin/rails test:all` prints the current figures, and a per-layer breakdown kept by
 hand only rots. Tests run
 in parallel across one process per core, and SimpleCov results are merged per worker —
@@ -284,7 +284,8 @@ another `DELETE` — and `/profile` answers `DELETE` by deleting the account of 
 asked. Reproduced with `fetch(..., { method: "DELETE", redirect: "follow" })` against
 the running application, and the account was gone. A test asserts the status.
 
-**Mass assignment.** `params.expect` everywhere rather than `params.permit` — a request
+**Mass assignment.** `params.expect` in every controller that takes a form, rather than
+`params.permit` — a request
 that is not shaped like the form is a 400 rather than something quietly filtered to an
 empty hash. `:role` appears in exactly one permitted list, in the admin namespace. Both
 self-registration and profile editing have a test that submits `role: admin` and asserts
@@ -305,7 +306,7 @@ change something in `test/controllers/admin/users_controller_test.rb`, the rate 
 
 Every test written for a defence here was checked the same way: remove the defence, run
 the test, watch it fail. That is not a formality — the self-demotion test passed for a
-year of commits with the parameter filter deleted, because a different rule was doing
+whole run with the parameter filter deleted, because a different rule was doing
 the blocking.
 
 ---
@@ -331,11 +332,12 @@ Form feedback works in three layers. `required`, `type="email"`, `minlength` and
 JavaScript. The server-side rules are the ones that decide, and the system tests check
 both: one asserts the browser blocks a short password before any request, and the
 server-side test uses a duplicate email, because that is the case the browser cannot
-catch. Server-side errors render both as a summary and beside the field that caused
+catch. Server-side errors render beside the field that caused
 them, with `aria-invalid` and `aria-describedby` so a screen reader gets the pairing.
 
 Layout is Tailwind, mobile-first. The users table scrolls inside its own container on a
-phone with the name column pinned, so the row still says whose it is. A system test
+phone. The name column pins from 640px up but not below it: on a phone the identity
+column and three buttons do not both fit, and pinning it covers the actions. A system test
 resizes to 390px and fails if any screen is wider than the viewport.
 
 ---

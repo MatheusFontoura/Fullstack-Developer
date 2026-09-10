@@ -1,7 +1,7 @@
 class PasswordsController < ApplicationController
   allow_unauthenticated_access
   before_action :set_user_by_token, only: %i[ edit update ]
-  rate_limit to: 10, within: 3.minutes, only: :create, with: -> { redirect_to new_password_path, alert: "Try again later." }
+  rate_limit to: 10, within: 3.minutes, only: :create, with: -> { redirect_to new_password_path, alert: "Try again later.", status: :see_other }
 
   def new
   end
@@ -18,6 +18,15 @@ class PasswordsController < ApplicationController
   end
 
   def update
+    # has_secure_password drops a blank assignment and the length rule allows nil, so an
+    # empty submission saves cleanly and announces a reset that never happened.
+    if new_password_params[:password].blank?
+      @user.errors.add(:password, :blank)
+      flash.now[:alert] = @user.errors.full_messages.to_sentence
+
+      return render :edit, status: :unprocessable_content
+    end
+
     if @user.update(new_password_params)
       @user.sessions.destroy_all
       redirect_to new_session_path, notice: "Password has been reset."
@@ -41,6 +50,6 @@ class PasswordsController < ApplicationController
     def set_user_by_token
       @user = User.find_by_password_reset_token!(params[:token])
     rescue ActiveSupport::MessageVerifier::InvalidSignature
-      redirect_to new_password_path, alert: "Password reset link is invalid or has expired."
+      redirect_to new_password_path, alert: "Password reset link is invalid or has expired.", status: :see_other
     end
 end
