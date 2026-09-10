@@ -64,6 +64,34 @@ class PasswordsControllerTest < ActionDispatch::IntegrationTest
     assert_notice "Password has been reset"
   end
 
+  # has_secure_password ignores a blank assignment, so this saved cleanly, destroyed every
+  # session and announced a reset while the old password still worked.
+  test "refuses an empty password instead of reporting a reset that did not happen" do
+    @user.sessions.create!
+    digest = @user.password_digest
+
+    put password_path(@user.password_reset_token), params: { password_reset: { password: "", password_confirmation: "" } }
+
+    assert_response :unprocessable_content
+    assert_equal digest, @user.reload.password_digest
+    assert_not_empty @user.sessions.reload, "the sessions were destroyed for a reset that did not happen"
+  end
+
+  # assert_enqueued_email_with never renders the body, so a broken link in the template
+  # ships green. This opens what the person receives.
+  test "sends a link that opens the form for this account" do
+    mail = PasswordsMailer.reset(@user)
+
+    link = mail.html_part ? mail.html_part.body.to_s : mail.body.to_s
+    token = link[%r{/passwords/([^/"]+)/edit}, 1]
+
+    assert token, "the mail carries no reset link"
+
+    get edit_password_path(token)
+
+    assert_response :success
+  end
+
   test "refuses a confirmation that does not match" do
     token = @user.password_reset_token
     assert_no_changes -> { @user.reload.password_digest } do
