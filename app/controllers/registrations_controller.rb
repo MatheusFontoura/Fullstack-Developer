@@ -2,7 +2,7 @@ class RegistrationsController < ApplicationController
   allow_unauthenticated_access
   before_action :redirect_if_authenticated, only: :new
   rate_limit to: 10, within: 3.minutes, only: :create,
-             with: -> { redirect_to new_registration_path, alert: "Too many attempts. Try again later." }
+             with: -> { redirect_to new_registration_path, alert: "Too many attempts. Try again later.", status: :see_other }
 
   def new
     @user = User.new

@@ -36,7 +36,7 @@ module Admin
 
     def destroy
       if @user == Current.user
-        redirect_to admin_users_path, alert: "Delete your own account from your profile."
+        redirect_to admin_users_path, alert: "Delete your own account from your profile.", status: :see_other
       else
         @user.destroy!
         redirect_to admin_users_path, notice: "#{@user.full_name} was removed.", status: :see_other

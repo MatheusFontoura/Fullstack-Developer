@@ -5,12 +5,12 @@ module Admin
 
       def update
         if @user == Current.user
-          return redirect_to admin_users_path,
+          return redirect_to admin_users_path, status: :see_other,
                              alert: "You cannot change your own role. Ask another admin."
         end
 
         unless @user.update(role: @user.admin? ? :user : :admin)
-          return redirect_to admin_users_path, alert: @user.errors.full_messages.to_sentence
+          return redirect_to admin_users_path, alert: @user.errors.full_messages.to_sentence, status: :see_other
         end
 
         message = "#{@user.full_name} is now #{@user.admin? ? "an admin" : "a user"}."
