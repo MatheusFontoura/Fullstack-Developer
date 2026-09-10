@@ -73,6 +73,7 @@ class PasswordsControllerTest < ActionDispatch::IntegrationTest
     put password_path(@user.password_reset_token), params: { password_reset: { password: "", password_confirmation: "" } }
 
     assert_response :unprocessable_content
+    assert_select "p.field-error", text: "Password can't be blank"
     assert_equal digest, @user.reload.password_digest
     assert_not_empty @user.sessions.reload, "the sessions were destroyed for a reset that did not happen"
   end
@@ -99,7 +100,7 @@ class PasswordsControllerTest < ActionDispatch::IntegrationTest
     end
 
     assert_response :unprocessable_content
-    assert_notice "Password confirmation doesn't match Password"
+    assert_select "p.field-error", text: "Password confirmation doesn't match Password"
   end
 
   test "update reports the real reason when the new password is too short" do
@@ -108,7 +109,7 @@ class PasswordsControllerTest < ActionDispatch::IntegrationTest
     end
 
     assert_response :unprocessable_content
-    assert_notice "Password is too short"
+    assert_select "p.field-error", text: /Password is too short/
   end
 
   private

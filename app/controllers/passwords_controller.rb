@@ -22,7 +22,6 @@ class PasswordsController < ApplicationController
     # empty submission saves cleanly and announces a reset that never happened.
     if new_password_params[:password].blank?
       @user.errors.add(:password, :blank)
-      flash.now[:alert] = @user.errors.full_messages.to_sentence
 
       return render :edit, status: :unprocessable_content
     end
@@ -32,8 +31,8 @@ class PasswordsController < ApplicationController
       redirect_to new_session_path, notice: "Password has been reset."
     else
       # The generated controller reports "passwords did not match" for every failure,
-      # which is wrong as soon as there is a length rule to break.
-      flash.now[:alert] = @user.errors.full_messages.to_sentence
+      # which is wrong as soon as there is a length rule to break. The form shows each
+      # error under the field it belongs to instead.
       render :edit, status: :unprocessable_content
     end
   end
