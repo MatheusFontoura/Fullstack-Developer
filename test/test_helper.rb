@@ -8,7 +8,6 @@ SimpleCov.start "rails" do
   enable_coverage :branch
 
   skip %r{\A/test/}
-  skip "app/channels/application_cable"
   skip "config/"
 
   group "Jobs", "app/jobs"
