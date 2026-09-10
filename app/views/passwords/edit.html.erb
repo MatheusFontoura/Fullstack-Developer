@@ -10,15 +10,17 @@
 
       <div>
         <%= form.label :password, "New password", class: "field-label" %>
-        <%= form.password_field :password, required: true, autofocus: true, autocomplete: "new-password",
+        <%= form.password_field :password, **field_error_attributes(@user, :password), required: true, autofocus: true, autocomplete: "new-password",
               minlength: 8, maxlength: 72, placeholder: "Your password", class: "field-input" %>
+        <%= field_error @user, :password %>
         <p class="field-hint">At least 8 characters.</p>
       </div>
 
       <div>
         <%= form.label :password_confirmation, "Confirm password", class: "field-label" %>
-        <%= form.password_field :password_confirmation, required: true, autocomplete: "new-password",
+        <%= form.password_field :password_confirmation, **field_error_attributes(@user, :password_confirmation), required: true, autocomplete: "new-password",
               minlength: 8, maxlength: 72, placeholder: "Your password", class: "field-input" %>
+        <%= field_error @user, :password_confirmation %>
       </div>
 
       <%= form.submit "Save password", class: "btn-primary w-full", data: { turbo_submits_with: "Saving…" } %>
