@@ -25,7 +25,8 @@ class User < ApplicationRecord
   normalizes :full_name, with: ->(name) { name.strip }
 
   validates :full_name, presence: true, length: { maximum: 120 }
-  validates :email, presence: true, uniqueness: true, format: { with: URI::MailTo::EMAIL_REGEXP }
+  validates :email, presence: true, uniqueness: true,
+                    format: { with: URI::MailTo::EMAIL_REGEXP, allow_blank: true }
   validates :password, length: { minimum: 8 }, allow_nil: true
   validate :avatar_image_must_be_a_supported_image
 

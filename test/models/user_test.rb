@@ -154,6 +154,15 @@ class UserTest < ActiveSupport::TestCase
     assert_equal "Katherine Johnson", user.reload.full_name
   end
 
+  # presence and format both fired on a blank value, so the form read
+  # "Email can't be blank and Email is invalid".
+  test "reports one reason for a blank email" do
+    user = build(email: "")
+
+    assert_predicate user, :invalid?
+    assert_equal [ "can't be blank" ], user.errors[:email]
+  end
+
   private
     def only_admin
       User.admin.where.not(id: users(:admin).id).destroy_all
