@@ -148,7 +148,7 @@ bin/rails test          # skips system tests
 bin/ci                  # the whole pipeline: lint, audits, Brakeman, tests, seeds
 ```
 
-**177 tests, 625 assertions, 99.76% line coverage, 97.54% branch coverage** on the last
+**179 tests, 632 assertions, 99.76% line coverage, 97.54% branch coverage** on the last
 run — `bin/rails test:all` prints the current figures, and a per-layer breakdown kept by
 hand only rots. Tests run
 in parallel across one process per core, and SimpleCov results are merged per worker —

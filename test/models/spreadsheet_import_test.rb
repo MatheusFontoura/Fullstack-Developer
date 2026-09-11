@@ -12,6 +12,15 @@ class SpreadsheetImportTest < ActiveSupport::TestCase
     assert_includes import.errors[:file], "must be under 5 MB"
   end
 
+  # The form's required attribute keeps a browser from reaching this, so the model is
+  # the only thing standing between a console or a script and an import with no file.
+  test "rejects a record with no file at all" do
+    import = build
+
+    assert_predicate import, :invalid?
+    assert_includes import.errors[:file], "must be attached"
+  end
+
   test "rejects an extension no spreadsheet reader understands" do
     import = build
     import.file.attach(io: StringIO.new("a,b"), filename: "users.numbers")
