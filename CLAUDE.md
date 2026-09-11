@@ -5,7 +5,7 @@
 - Ruby 4.0.6 (`.ruby-version`), Rails 8.1.3.1, Bundler 4.0.16.
 - SQLite 3 via `sqlite3` 2.9.6. Solid Cache 1.0.10, Solid Queue 1.7.0, Solid Cable 4.0.2. No Redis anywhere.
 - Propshaft, importmap-rails, Turbo, Stimulus, tailwindcss-rails 4.6.0 (Tailwind v4). Puma 8, Thruster in production.
-- Minitest 6, Capybara + selenium-webdriver (headless Chrome), SimpleCov 1.1.1.
+- Minitest 6, Capybara + selenium-webdriver (headless Chrome), SimpleCov 1.2.0.
 - RuboCop 1.90 with rubocop-rails-omakase, rubocop-minitest, rubocop-performance. Brakeman and bundler-audit in CI.
 
 ## Architecture
