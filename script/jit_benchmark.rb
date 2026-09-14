@@ -2,9 +2,9 @@
 # plain-interpreter column without disabling it. Needs a database, and a master key the
 # image can read — regenerate credentials first if you do not have one:
 #
-#   docker run --rm -e RUBYOPT=--yjit umanni:prod \
+#   docker run --rm -e RUBYOPT=--yjit umanni \
 #     sh -c "bin/rails db:prepare && bin/rails runner script/jit_benchmark.rb"
-#   docker run --rm -e RUBYOPT=--zjit umanni:prod \
+#   docker run --rm -e RUBYOPT=--zjit umanni \
 #     sh -c "bin/rails db:prepare && bin/rails runner script/jit_benchmark.rb"
 #
 # No benchmark gem: it stopped being a default gem in Ruby 4, and a monotonic clock

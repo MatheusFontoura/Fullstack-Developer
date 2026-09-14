@@ -102,16 +102,19 @@ docker compose exec web bin/rails db:seed   # optional: `db:prepare` already see
 
 ### Local
 
-Requires Ruby 4.0.6 (`.ruby-version`).
+Requires Ruby 4.0.6 (`.ruby-version`) — `rbenv install 4.0.6`, `mise use ruby@4.0.6` or the
+equivalent for your version manager. No Node and no libvips: assets go through importmap
+and Propshaft, and avatars are stored without variants.
 
 ```bash
 bin/setup --skip-server   # bundle and prepare the databases
-bin/rails db:seed
 bin/dev                   # Puma, the Tailwind watcher and the Solid Queue worker
 ```
 
-Plain `bin/setup` does the same and then hands the terminal to `bin/dev`, so seed first
-or seed from another shell.
+`bin/setup` runs `db:prepare`, which seeds a database it just created, so a fresh clone
+needs no separate `bin/rails db:seed` — run that only to re-seed an existing database.
+Plain `bin/setup` hands the terminal straight to `bin/dev`. `bin/dev` installs the
+`foreman` gem on first run if it is missing.
 
 ### Demo logins
 
@@ -148,14 +151,16 @@ bin/rails test          # skips system tests
 bin/ci                  # the whole pipeline: lint, audits, Brakeman, tests, seeds
 ```
 
-**179 tests, 632 assertions, 99.76% line coverage, 97.54% branch coverage** on the last
+**180 tests, 640 assertions, 99.76% line coverage, 97.54% branch coverage** on the last
 run — `bin/rails test:all` prints the current figures, and a per-layer breakdown kept by
 hand only rots. Tests run
 in parallel across one process per core, and SimpleCov results are merged per worker —
 without that merge the report shows roughly one worker's share and every number after it
 is fiction. The 90% floor is enforced under `CI` or `COVERAGE`.
 
-System tests need Chrome. If it is not on `PATH` (WSL, slim containers):
+System tests need Chrome, and `Dockerfile.dev` does not install one: run the suite on the
+host, not through `docker compose exec`. If Chrome is not on `PATH` (WSL, slim
+containers):
 
 ```bash
 CHROME_BINARY=/path/to/chrome bin/rails test:system
@@ -203,8 +208,9 @@ is the test that would have caught the cache bug listed above.
 **Deterministic encryption on `email`.** The column has to stay uniquely indexable and
 findable by exact value — `authenticate_by` and the unique index both depend on
 identical plaintext producing identical ciphertext. The cost is real and worth stating:
-`LIKE` on email is impossible, so the admin search matches `full_name`, which is
-deliberately left in plaintext for exactly that reason.
+`LIKE` on email is impossible. The admin search works around it by branching: a term
+containing `@` is matched as an exact email, and anything else runs `LIKE` against
+`full_name`, which is deliberately left in plaintext for exactly that reason.
 
 **Roles are an enum with a database constraint.** The enum guards the application; the
 `CHECK` constraint guards the console, data migrations and anything else that goes
@@ -284,10 +290,11 @@ another `DELETE` — and `/profile` answers `DELETE` by deleting the account of 
 asked. Reproduced with `fetch(..., { method: "DELETE", redirect: "follow" })` against
 the running application, and the account was gone. A test asserts the status.
 
-**Mass assignment.** `params.expect` in every controller that takes a form, rather than
+**Mass assignment.** `params.expect` in every controller that accepts a form, rather than
 `params.permit` — a request
 that is not shaped like the form is a 400 rather than something quietly filtered to an
-empty hash. `:role` appears in exactly one permitted list, in the admin namespace. Both
+empty hash. (The admin index reads its filters with `params.permit`; it takes query
+string, not a form, and a malformed one should narrow the list, not 400.) `:role` appears in exactly one permitted list, in the admin namespace. Both
 self-registration and profile editing have a test that submits `role: admin` and asserts
 the user stays a user.
 
@@ -347,16 +354,31 @@ resizes to 390px and fails if any screen is wider than the viewport.
 The production image is multi-stage, runs as a non-root user, and serves through
 **Thruster** for asset caching, compression and X-Sendfile.
 
+**Generate your own credentials before building** — see the Credentials section below.
+The build bakes `config/credentials.yml.enc` into the image, and a key generated afterwards
+cannot decrypt it.
+
 ```bash
 docker build -t umanni .
 docker run -d -p 80:80 \
-  -e RAILS_MASTER_KEY=<key> \
+  -e RAILS_MASTER_KEY="$(cat config/master.key)" \
   -e SOLID_QUEUE_IN_PUMA=true \
+  -e APP_HOST=umanni.example.com \
+  -e SMTP_ADDRESS=smtp.example.com -e SMTP_PORT=587 \
   -v umanni_storage:/rails/storage umanni
 ```
 
+`RAILS_MASTER_KEY` is the contents of `config/master.key`, which is not in this
+repository.
+
 `SOLID_QUEUE_IN_PUMA` is what starts the job supervisor inside Puma; without it the
 image serves fine and imports never run. Kamal sets it in `config/deploy.yml`.
+
+`APP_HOST` and the SMTP pair are not optional decoration. Production raises on delivery
+errors, and password reset is the only way an imported user ever signs in: leave them at
+their defaults and the reset mail is addressed from `example.com` and posted to
+`localhost:587`. Note the name changes by environment — development reads `SMTP_HOST`,
+production reads `SMTP_ADDRESS`.
 
 **Regenerating credentials means regenerating the encryption keys.** `email` is an
 encrypted column, and production reads `active_record_encryption` from the credentials
@@ -366,8 +388,10 @@ its three keys in, or the image will boot, answer `/up` with a 200, render every
 and return a 500 the first time anyone signs in or registers. That is not hypothetical:
 it is what this image did until the keys were added.
 
-`config/deploy.yml` is a complete Kamal 2 configuration: fill in the registry, image
-owner, server and host, and `bin/kamal setup` is the deploy. `kamal config` resolves the
+`config/deploy.yml` is a complete Kamal 2 configuration: fill in the image owner, server
+IP, registry user and the `APP_HOST`/`SMTP_ADDRESS`/`MAIL_FROM` under `env: clear:`, and
+`bin/kamal setup` is the deploy. The two secrets it needs — `KAMAL_REGISTRY_PASSWORD` and
+`RAILS_MASTER_KEY` — come from `.kamal/secrets`, which reads both from your environment. `kamal config` resolves the
 whole file — roles, image, volume, ssh, builder — and `kamal secrets print` resolves the
 master key. **A deploy against a real host was not exercised**; there was no server to
 deploy to. TLS terminates at
