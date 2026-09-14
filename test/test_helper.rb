@@ -10,8 +10,6 @@ SimpleCov.start "rails" do
   skip %r{\A/test/}
   skip "config/"
 
-  group "Jobs", "app/jobs"
-
   # Without merging, the report shows one worker's share.
   merging true
   merge_timeout 600

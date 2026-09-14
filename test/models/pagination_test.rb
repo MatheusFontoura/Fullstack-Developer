@@ -23,7 +23,6 @@ class PaginationTest < ActiveSupport::TestCase
 
     assert_predicate page, :next?
     assert_not page.previous?
-    # The extra row is the signal, so the query never has to know the total.
     assert_equal 2, page.records.size
   end
 

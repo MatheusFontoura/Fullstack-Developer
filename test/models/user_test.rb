@@ -154,8 +154,8 @@ class UserTest < ActiveSupport::TestCase
     assert_equal "Katherine Johnson", user.reload.full_name
   end
 
-  # presence and format both fired on a blank value, so the form read
-  # "Email can't be blank and Email is invalid".
+  # A blank value trips presence and format both, and the field shows whatever it is
+  # given: two reasons where the reader needs one.
   test "reports one reason for a blank email" do
     user = build(email: "")
 

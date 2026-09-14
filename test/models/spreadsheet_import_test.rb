@@ -29,7 +29,7 @@ class SpreadsheetImportTest < ActiveSupport::TestCase
     assert_includes import.errors[:file], "must be a .csv or .xlsx file"
   end
 
-  # It failed inside the job instead, and a job that finishes before the browser has
+  # Rejecting it here keeps it out of the queue. A job that fails before the browser has
   # subscribed to the stream leaves the page showing "Pending" until a reload.
   test "rejects a file with nothing in it" do
     import = build

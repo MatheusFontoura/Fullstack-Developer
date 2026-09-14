@@ -1,8 +1,8 @@
 require "test_helper"
 
 # Development runs the same Solid adapters as production, which only helps if both are
-# pointed at the same databases. cache.yml once named the cache database under
-# production alone, and every rate-limited action raised in development.
+# pointed at the same databases. Naming the cache database under production alone makes
+# every rate-limited action raise in development, and the test null store hides it.
 class SolidStackTest < ActiveSupport::TestCase
   ENVIRONMENTS = %w[ development production ].freeze
 

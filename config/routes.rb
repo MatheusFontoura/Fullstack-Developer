@@ -11,7 +11,6 @@ Rails.application.routes.draw do
     resources :spreadsheet_imports, only: %i[ index new create show ]
 
     resources :users, except: :show do
-      # A sub-resource, so UsersController stays plain CRUD.
       resource :role, only: :update, module: :users
     end
   end

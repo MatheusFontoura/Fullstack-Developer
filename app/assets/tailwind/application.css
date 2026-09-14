@@ -37,8 +37,7 @@
   .field-input {
     @apply block w-full rounded-lg border border-slate-300 px-3 py-2 text-slate-900
            placeholder:text-slate-400 shadow-xs
-           focus:border-brand-500 focus:ring-2 focus:ring-brand-100 focus:outline-none
-           disabled:bg-slate-50 disabled:text-slate-500;
+           focus:border-brand-500 focus:ring-2 focus:ring-brand-100 focus:outline-none;
   }
 
   /* A server-side error should look like the browser's own, not like a red sentence
@@ -67,7 +66,7 @@
   }
 
   /* Tailwind v4 will not @apply one component class inside another. */
-  .btn, .btn-primary, .btn-secondary, .btn-danger {
+  .btn-primary, .btn-secondary, .btn-danger {
     @apply inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2
            text-sm font-medium transition-colors cursor-pointer
            focus-visible:outline-2 focus-visible:outline-offset-2
@@ -88,7 +87,7 @@
            focus-visible:outline-red-500;
   }
 
-  .badge, .badge-admin, .badge-user,
+  .badge-admin, .badge-user,
   .badge-neutral, .badge-info, .badge-success, .badge-danger {
     @apply inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium
            ring-1 ring-inset;
