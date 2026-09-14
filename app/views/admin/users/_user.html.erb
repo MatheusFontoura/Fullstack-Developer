@@ -20,7 +20,7 @@
   <td class="ml-auto px-4 pb-2 md:ml-0 md:table-cell md:py-3">
     <div class="flex flex-wrap items-center justify-end gap-2">
       <% if user == Current.user %>
-        <span class="text-xs text-slate-400">You</span>
+        <span class="text-xs text-slate-500">You</span>
       <% else %>
         <%= button_to admin_user_role_path(user), method: :patch, class: "btn-secondary min-w-24 text-xs whitespace-nowrap" do %>
           Make <%= user.admin? ? "user" : "admin" %>

@@ -24,7 +24,7 @@
 
   <div>
     <%= form.label :avatar_image, "Avatar", class: "field-label" %>
-    <div class="flex items-center gap-4" data-controller="image-preview">
+    <div class="flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:gap-4" data-controller="image-preview">
       <img data-image-preview-target="preview" hidden alt=""
            class="size-14 rounded-full object-cover ring-1 ring-slate-200">
       <span data-image-preview-target="current">
