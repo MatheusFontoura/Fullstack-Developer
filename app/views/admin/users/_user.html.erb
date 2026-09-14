@@ -1,5 +1,5 @@
-<tr id="<%= dom_id(user) %>" class="group flex flex-wrap items-center gap-y-2 py-2 hover:bg-slate-50 sm:table-row sm:gap-0 sm:py-0">
-  <td class="w-full bg-white px-4 pt-2 group-hover:bg-slate-50 sm:w-auto sm:table-cell sm:py-3 sm:sticky sm:left-0 sm:z-10">
+<tr id="<%= dom_id(user) %>" class="group flex flex-wrap items-center gap-y-2 py-2 hover:bg-slate-50 md:table-row md:gap-0 md:py-0">
+  <td class="w-full bg-white px-4 pt-2 group-hover:bg-slate-50 md:w-auto md:table-cell md:py-3 md:sticky md:left-0 md:z-10">
     <div class="flex items-center gap-3">
       <%= render "shared/avatar", user: user %>
       <div class="min-w-0 max-w-64">
@@ -9,15 +9,15 @@
     </div>
   </td>
 
-  <td class="px-4 pb-2 whitespace-nowrap sm:table-cell sm:py-3">
+  <td class="px-4 pb-2 whitespace-nowrap md:table-cell md:py-3">
     <span class="<%= user.admin? ? "badge-admin" : "badge-user" %>"><%= user.role.capitalize %></span>
   </td>
 
-  <td class="hidden px-4 py-3 text-sm whitespace-nowrap text-slate-500 sm:table-cell">
+  <td class="hidden px-4 py-3 text-sm whitespace-nowrap text-slate-500 md:table-cell">
     <%= user.created_at.to_date.to_fs(:long) %>
   </td>
 
-  <td class="ml-auto px-4 pb-2 sm:ml-0 sm:table-cell sm:py-3">
+  <td class="ml-auto px-4 pb-2 md:ml-0 md:table-cell md:py-3">
     <div class="flex flex-wrap items-center justify-end gap-2">
       <% if user == Current.user %>
         <span class="text-xs text-slate-400">You</span>
