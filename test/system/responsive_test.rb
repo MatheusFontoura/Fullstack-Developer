@@ -50,25 +50,26 @@ class ResponsiveTest < ApplicationSystemTestCase
     assert clipped, "the name was not truncated, so the cell grew to fit it"
   end
 
-  # A pinned identity column that covers the buttons is worse than no pinned column:
-  # everything still renders, and only the destructive action stays reachable.
+  # The table used to run 654px wide inside a 356px viewport, which put the whole actions
+  # column past the right edge behind a scrollbar nobody notices. Reaching an action has
+  # to mean seeing it, so this asserts the box is on screen and nothing sits over it.
   test "every action in the users table can be tapped on a phone" do
     sign_in_as users(:admin)
     resize_to_phone
     visit admin_users_path
-    page.execute_script(%(document.querySelector('.table-scroll').scrollLeft = 9999))
 
-    covered = page.evaluate_script(<<~'JS')
+    unreachable = page.evaluate_script(<<~'JS')
       [...document.querySelector("tbody tr").querySelectorAll("a, button")]
         .filter(el => {
           const box = el.getBoundingClientRect();
           const front = document.elementFromPoint(box.left + box.width / 2, box.top + box.height / 2);
-          return !(front === el || el.contains(front));
+          const onScreen = box.left >= 0 && box.right <= window.innerWidth;
+          return !onScreen || !(front === el || el.contains(front));
         })
         .map(el => el.textContent.replace(/\s+/g, " ").trim());
     JS
 
-    assert_empty covered, "these are covered by something else: #{covered.join(", ")}"
+    assert_empty unreachable, "off screen or covered on a phone: #{unreachable.join(", ")}"
   end
 
   private
