@@ -30,14 +30,12 @@ decided what shipped. Nothing merged on a model's say-so — a phase moved only 
 gate: the full suite green, RuboCop and Brakeman clean, the production image built and
 exercised, and the flow actually clicked through in a browser.
 
-**The workflow.** The work ran in phases, each on its own branch with its own PR:
-skeleton → authentication → admin CRUD → live dashboard → import → profile → delivery.
-Read-only work fanned out in parallel — investigation, UI testing, a second opinion from
-a different model — while writing stayed single-threaded, because two agents editing the
-same tree produce decisions nobody reviewed. Each phase ended at a gate, and a failed
-gate sent the phase back rather than forward.
+**The workflow.** Skeleton → authentication → admin CRUD → live dashboard → import →
+profile → delivery. Read-only work fanned out in parallel — investigation, UI testing, a
+second opinion from a different model — while writing stayed single-threaded, because two
+agents editing the same tree produce decisions nobody reviewed.
 
-**What that caught.** Several bugs that a green test suite did not:
+**What that caught.** Bugs a green test suite did not:
 
 - `tailwindcss:watch` exits when stdin is not a TTY, so `docker compose up` died on
   startup. It needed the `[always]` argument. This would have broken on the reviewer's
@@ -48,11 +46,10 @@ gate sent the phase back rather than forward.
   which makes rate limiting inert. There is now a test that guards the class of bug.
 - The import's progress bar stuck on "Processing" about one run in three: two broadcasts
   a millisecond apart, arriving out of order.
-- The dashboard counters froze for the entire duration of an import — the one moment a
-  live counter earns its place. Turbo debounces refresh broadcasts and the debounce
-  restarts on every write, so a job creating rows faster than the delay produced no
-  refresh at all until it finished. Found by watching a 150-row import, not by reading
-  the code, which is why the comment in the model had confidently claimed the opposite.
+- The dashboard counters froze for the entire duration of an import. Turbo debounces
+  refresh broadcasts and the debounce restarts on every write, so a job creating rows
+  faster than the delay produced no refresh at all until it finished. Found by watching a
+  150-row import; the code reads as though it works.
 - The production image seeded demo users, with a published password, because the
   entrypoint runs `db:prepare`. Found by running the image rather than only building it.
 - A content security policy added in review blocked the import bar's inline width, so it
@@ -62,13 +59,10 @@ gate sent the phase back rather than forward.
   container. `raise_delivery_errors` is off in development, so it failed in silence.
   Found by following this README's own instructions instead of trusting them.
 
-**What a later pass caught.** A commit titled "cut comments that narrate the code" also
-removed a test — the one asserting a forged session cookie is ignored — and tightened
-`img_src`. Neither change was wrong; neither belonged in that commit, and the missing
-test was only noticed by a review that had no memory of writing it. It is back. The same
-pass found two tests that kept passing with the defence they named removed, because a
-different rule was doing the blocking. Those five assertions were each checked the same
-way afterwards: remove the defence, watch the test go red.
+A later pass found a commit that had quietly dropped the test asserting a forged session
+cookie is ignored, and two tests that kept passing with the defence they named removed,
+because a different rule was doing the blocking. All of them are checked the same way
+now: remove the defence, watch the test go red.
 
 ### A note on the hidden instructions in the brief
 
