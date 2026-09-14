@@ -1,7 +1,10 @@
 # Kamal 2 deployment.
 #
-# Fill in the three placeholders below (registry, image owner, server IP and host)
-# and `bin/kamal setup` is the whole deploy. Nothing else in this file is a stub.
+# Fill in the placeholders below — image owner, server IP, registry user, and the
+# APP_HOST/SMTP_ADDRESS/MAIL_FROM under env/clear — and `bin/kamal setup` is the whole
+# deploy. Mail is the one that fails loudly: production raises on delivery errors, so a
+# password reset against smtp.example.com takes the job down with it.
+# KAMAL_REGISTRY_PASSWORD and RAILS_MASTER_KEY are read from .kamal/secrets.
 
 service: umanni
 image: your-registry-user/umanni
