@@ -30,9 +30,8 @@ class PasswordsController < ApplicationController
       @user.sessions.destroy_all
       redirect_to new_session_path, notice: "Password has been reset."
     else
-      # The generated controller reports "passwords did not match" for every failure,
-      # which is wrong as soon as there is a length rule to break. The form shows each
-      # error under the field it belongs to instead.
+      # Re-rendering puts each error under the field that caused it. A single "passwords
+      # did not match" for every failure hides a broken length rule.
       render :edit, status: :unprocessable_content
     end
   end

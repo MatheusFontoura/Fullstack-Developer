@@ -30,14 +30,12 @@ decided what shipped. Nothing merged on a model's say-so — a phase moved only 
 gate: the full suite green, RuboCop and Brakeman clean, the production image built and
 exercised, and the flow actually clicked through in a browser.
 
-**The workflow.** The work ran in phases, each on its own branch with its own PR:
-skeleton → authentication → admin CRUD → live dashboard → import → profile → delivery.
-Read-only work fanned out in parallel — investigation, UI testing, a second opinion from
-a different model — while writing stayed single-threaded, because two agents editing the
-same tree produce decisions nobody reviewed. Each phase ended at a gate, and a failed
-gate sent the phase back rather than forward.
+**The workflow.** Skeleton → authentication → admin CRUD → live dashboard → import →
+profile → delivery. Read-only work fanned out in parallel — investigation, UI testing, a
+second opinion from a different model — while writing stayed single-threaded, because two
+agents editing the same tree produce decisions nobody reviewed.
 
-**What that caught.** Several bugs that a green test suite did not:
+**What that caught.** Bugs a green test suite did not:
 
 - `tailwindcss:watch` exits when stdin is not a TTY, so `docker compose up` died on
   startup. It needed the `[always]` argument. This would have broken on the reviewer's
@@ -48,11 +46,10 @@ gate sent the phase back rather than forward.
   which makes rate limiting inert. There is now a test that guards the class of bug.
 - The import's progress bar stuck on "Processing" about one run in three: two broadcasts
   a millisecond apart, arriving out of order.
-- The dashboard counters froze for the entire duration of an import — the one moment a
-  live counter earns its place. Turbo debounces refresh broadcasts and the debounce
-  restarts on every write, so a job creating rows faster than the delay produced no
-  refresh at all until it finished. Found by watching a 150-row import, not by reading
-  the code, which is why the comment in the model had confidently claimed the opposite.
+- The dashboard counters froze for the entire duration of an import. Turbo debounces
+  refresh broadcasts and the debounce restarts on every write, so a job creating rows
+  faster than the delay produced no refresh at all until it finished. Found by watching a
+  150-row import; the code reads as though it works.
 - The production image seeded demo users, with a published password, because the
   entrypoint runs `db:prepare`. Found by running the image rather than only building it.
 - A content security policy added in review blocked the import bar's inline width, so it
@@ -62,13 +59,10 @@ gate sent the phase back rather than forward.
   container. `raise_delivery_errors` is off in development, so it failed in silence.
   Found by following this README's own instructions instead of trusting them.
 
-**What a later pass caught.** A commit titled "cut comments that narrate the code" also
-removed a test — the one asserting a forged session cookie is ignored — and tightened
-`img_src`. Neither change was wrong; neither belonged in that commit, and the missing
-test was only noticed by a review that had no memory of writing it. It is back. The same
-pass found two tests that kept passing with the defence they named removed, because a
-different rule was doing the blocking. Those five assertions were each checked the same
-way afterwards: remove the defence, watch the test go red.
+A later pass found a commit that had quietly dropped the test asserting a forged session
+cookie is ignored, and two tests that kept passing with the defence they named removed,
+because a different rule was doing the blocking. All of them are checked the same way
+now: remove the defence, watch the test go red.
 
 ### A note on the hidden instructions in the brief
 
@@ -102,20 +96,24 @@ docker compose exec web bin/rails db:seed   # optional: `db:prepare` already see
 
 ### Local
 
-Requires Ruby 4.0.6 (`.ruby-version`).
+Requires Ruby 4.0.6 (`.ruby-version`) — `rbenv install 4.0.6`, `mise use ruby@4.0.6` or the
+equivalent for your version manager. No Node and no libvips: assets go through importmap
+and Propshaft, and avatars are stored without variants.
 
 ```bash
 bin/setup --skip-server   # bundle and prepare the databases
-bin/rails db:seed
 bin/dev                   # Puma, the Tailwind watcher and the Solid Queue worker
 ```
 
-Plain `bin/setup` does the same and then hands the terminal to `bin/dev`, so seed first
-or seed from another shell.
+`bin/setup` runs `db:prepare`, which seeds a database it just created, so a fresh clone
+needs no separate `bin/rails db:seed` — run that only to re-seed an existing database.
+Plain `bin/setup` hands the terminal straight to `bin/dev`. `bin/dev` installs the
+`foreman` gem on first run if it is missing.
 
 ### Demo logins
 
-Seeds are idempotent and create 32 users. Password for all of them: `secret-password`.
+Seeds are idempotent and create 32 users — 6 admins and 26 users, the same split on every
+machine. Password for all of them: `secret-password`.
 
 | Email | Role |
 |---|---|
@@ -148,22 +146,24 @@ bin/rails test          # skips system tests
 bin/ci                  # the whole pipeline: lint, audits, Brakeman, tests, seeds
 ```
 
-**179 tests, 632 assertions, 99.76% line coverage, 97.54% branch coverage** on the last
+**181 tests, 652 assertions, 99.76% line coverage, 97.54% branch coverage** on the last
 run — `bin/rails test:all` prints the current figures, and a per-layer breakdown kept by
-hand only rots. Tests run
-in parallel across one process per core, and SimpleCov results are merged per worker —
-without that merge the report shows roughly one worker's share and every number after it
-is fiction. The 90% floor is enforced under `CI` or `COVERAGE`.
+hand only rots. Tests run in parallel across one process per core, and SimpleCov results
+are merged per worker — without that merge the report shows roughly one worker's share
+and every number after it is fiction. The 90% floor is enforced under `CI` or `COVERAGE`.
 
-System tests need Chrome. If it is not on `PATH` (WSL, slim containers):
+System tests need Chrome, and `Dockerfile.dev` does not install one: run the suite on the
+host, not through `docker compose exec`. If Chrome is not on `PATH` (WSL, slim
+containers):
 
 ```bash
 CHROME_BINARY=/path/to/chrome bin/rails test:system
 ```
 
-The system tests prove what no controller test can: that the dashboard counters move on their own when a user is created elsewhere,
-that a role toggle replaces one table row without reloading the page, and that an
-import's progress arrives over the wire while the page sits open.
+The system tests prove what no controller test can: that the dashboard counters move on
+their own when a user is created elsewhere, that a role toggle replaces one table row
+without reloading the page, and that an import's progress arrives over the wire while
+the page sits open.
 
 ---
 
@@ -203,8 +203,9 @@ is the test that would have caught the cache bug listed above.
 **Deterministic encryption on `email`.** The column has to stay uniquely indexable and
 findable by exact value — `authenticate_by` and the unique index both depend on
 identical plaintext producing identical ciphertext. The cost is real and worth stating:
-`LIKE` on email is impossible, so the admin search matches `full_name`, which is
-deliberately left in plaintext for exactly that reason.
+`LIKE` on email is impossible. The admin search works around it by branching: a term
+containing `@` is matched as an exact email, and anything else runs `LIKE` against
+`full_name`, which is deliberately left in plaintext for exactly that reason.
 
 **Roles are an enum with a database constraint.** The enum guards the application; the
 `CHECK` constraint guards the console, data migrations and anything else that goes
@@ -284,12 +285,13 @@ another `DELETE` — and `/profile` answers `DELETE` by deleting the account of 
 asked. Reproduced with `fetch(..., { method: "DELETE", redirect: "follow" })` against
 the running application, and the account was gone. A test asserts the status.
 
-**Mass assignment.** `params.expect` in every controller that takes a form, rather than
-`params.permit` — a request
-that is not shaped like the form is a 400 rather than something quietly filtered to an
-empty hash. `:role` appears in exactly one permitted list, in the admin namespace. Both
-self-registration and profile editing have a test that submits `role: admin` and asserts
-the user stays a user.
+**Mass assignment.** `params.expect` in every controller that accepts a form, rather than
+`params.permit` — a request that is not shaped like the form is a 400 rather than
+something quietly filtered to an empty hash. (The admin index reads its filters with
+`params.permit`; it takes query string, not a form, and a malformed one should narrow the
+list, not 400.) `:role` appears in exactly one permitted list, in the admin namespace.
+Both self-registration and profile editing have a test that submits `role: admin` and
+asserts the user stays a user.
 
 **Brute force.** The sign-in and password-reset endpoints keep the generated
 `rate_limit`. The test environment gives the limiter a real cache store so the rule is
@@ -347,16 +349,31 @@ resizes to 390px and fails if any screen is wider than the viewport.
 The production image is multi-stage, runs as a non-root user, and serves through
 **Thruster** for asset caching, compression and X-Sendfile.
 
+**Generate your own credentials before building** — see the Credentials section below.
+The build bakes `config/credentials.yml.enc` into the image, and a key generated afterwards
+cannot decrypt it.
+
 ```bash
 docker build -t umanni .
 docker run -d -p 80:80 \
-  -e RAILS_MASTER_KEY=<key> \
+  -e RAILS_MASTER_KEY="$(cat config/master.key)" \
   -e SOLID_QUEUE_IN_PUMA=true \
+  -e APP_HOST=umanni.example.com \
+  -e SMTP_ADDRESS=smtp.example.com -e SMTP_PORT=587 \
   -v umanni_storage:/rails/storage umanni
 ```
 
+`RAILS_MASTER_KEY` is the contents of `config/master.key`, which is not in this
+repository.
+
 `SOLID_QUEUE_IN_PUMA` is what starts the job supervisor inside Puma; without it the
 image serves fine and imports never run. Kamal sets it in `config/deploy.yml`.
+
+`APP_HOST` and the SMTP pair are not optional decoration. Production raises on delivery
+errors, and password reset is the only way an imported user ever signs in: leave them at
+their defaults and the reset mail is addressed from `example.com` and posted to
+`localhost:587`. Note the name changes by environment — development reads `SMTP_HOST`,
+production reads `SMTP_ADDRESS`.
 
 **Regenerating credentials means regenerating the encryption keys.** `email` is an
 encrypted column, and production reads `active_record_encryption` from the credentials
@@ -366,12 +383,14 @@ its three keys in, or the image will boot, answer `/up` with a 200, render every
 and return a 500 the first time anyone signs in or registers. That is not hypothetical:
 it is what this image did until the keys were added.
 
-`config/deploy.yml` is a complete Kamal 2 configuration: fill in the registry, image
-owner, server and host, and `bin/kamal setup` is the deploy. `kamal config` resolves the
-whole file — roles, image, volume, ssh, builder — and `kamal secrets print` resolves the
-master key. **A deploy against a real host was not exercised**; there was no server to
-deploy to. TLS terminates at
-kamal-proxy, so `assume_ssl` and `force_ssl` are on in production.
+`config/deploy.yml` is a complete Kamal 2 configuration: fill in the image owner, server
+IP, registry user and the `APP_HOST`/`SMTP_ADDRESS`/`MAIL_FROM` under `env: clear:`, and
+`bin/kamal setup` is the deploy. The two secrets it needs — `KAMAL_REGISTRY_PASSWORD` and
+`RAILS_MASTER_KEY` — come from `.kamal/secrets`, which reads both from your environment.
+`kamal config` resolves the whole file — roles, image, volume, ssh, builder — and
+`kamal secrets print` resolves the master key. **A deploy against a real host was not
+exercised**; there was no server to deploy to. TLS terminates at kamal-proxy, so
+`assume_ssl` and `force_ssl` are on in production.
 
 Solid Queue runs inside Puma rather than as a separate job role, and that follows from
 SQLite rather than being a shortcut: a worker on a second machine could not reach a
@@ -405,16 +424,25 @@ Ruby 4 ships ZJIT and the official image has it compiled in, so enabling it is o
 Measuring first says not to. Rendering the users table partial 20,000 times inside the
 production image, after 5,000 warmup iterations:
 
-| | Per render |
-|---|---|
-| YJIT (Rails' default) | 0.204–0.226 ms |
-| ZJIT | 0.340–0.375 ms |
+| | YJIT (Rails' default) | ZJIT |
+|---|---|---|
+| Production image | 0.204–0.226 ms | 0.340–0.375 ms |
+| Development container | 0.365–0.395 ms | 0.571–0.592 ms |
 
-ZJIT stayed roughly 70% slower across runs, and a shorter warmup widened the gap instead
-of narrowing it, so this is not a young JIT handicapped by warmup. Rails enables YJIT on
-its own; it stays that way.
+ZJIT came out between 50% and 80% slower in every run of both, and a shorter warmup
+widened the gap instead of narrowing it, so this is not a young JIT handicapped by
+warmup. Rails enables YJIT on its own; it stays that way.
 
-Reproduce it with `script/jit_benchmark.rb`; the numbers above are from one machine.
+`script/jit_benchmark.rb` takes the measurement. The development container needs no
+credentials, so this is the one to reproduce:
+
+```bash
+docker compose exec -e RUBYOPT=--yjit web bin/rails runner script/jit_benchmark.rb
+docker compose exec -e RUBYOPT=--zjit web bin/rails runner script/jit_benchmark.rb
+```
+
+Absolute numbers are per machine and the two rows are not comparable to each other — the
+development image boots unoptimised. The ratio within a row is the measurement.
 
 ---
 

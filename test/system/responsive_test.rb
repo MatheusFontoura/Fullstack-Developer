@@ -50,25 +50,54 @@ class ResponsiveTest < ApplicationSystemTestCase
     assert clipped, "the name was not truncated, so the cell grew to fit it"
   end
 
-  # A pinned identity column that covers the buttons is worse than no pinned column:
-  # everything still renders, and only the destructive action stays reachable.
-  test "every action in the users table can be tapped on a phone" do
+  # Reaching an action has to mean seeing it. A row wide enough to push the buttons past
+  # the right edge leaves them behind a scrollbar nobody notices, and every other
+  # assertion here still passes. The widths bracket the layout switch: the two below it
+  # stack into cards, the two above lay out as a table, and the table has to fit the
+  # narrowest window that asks for one.
+  test "every action in the users table can be tapped at any width" do
+    User.create!(full_name: "Z" * 120, email: "wide@umanni.test",
+                 password: "secret-password", password_confirmation: "secret-password")
     sign_in_as users(:admin)
-    resize_to_phone
-    visit admin_users_path
-    page.execute_script(%(document.querySelector('.table-scroll').scrollLeft = 9999))
 
-    covered = page.evaluate_script(<<~'JS')
-      [...document.querySelector("tbody tr").querySelectorAll("a, button")]
-        .filter(el => {
-          const box = el.getBoundingClientRect();
-          const front = document.elementFromPoint(box.left + box.width / 2, box.top + box.height / 2);
-          return !(front === el || el.contains(front));
-        })
-        .map(el => el.textContent.replace(/\s+/g, " ").trim());
-    JS
+    [ 390, 700, 768, 1280 ].each do |width|
+      resize_window_to(width, 900)
+      visit admin_users_path(query: "ZZZZ")
 
-    assert_empty covered, "these are covered by something else: #{covered.join(", ")}"
+      unreachable = page.evaluate_script(<<~'JS')
+        [...document.querySelector("tbody tr").querySelectorAll("a, button")]
+          .filter(el => {
+            const box = el.getBoundingClientRect();
+            const front = document.elementFromPoint(box.left + box.width / 2, box.top + box.height / 2);
+            const onScreen = box.left >= 0 && box.right <= window.innerWidth;
+            return !onScreen || !(front === el || el.contains(front));
+          })
+          .map(el => el.textContent.replace(/\s+/g, " ").trim());
+      JS
+
+      assert_empty unreachable, "off screen or covered at #{width}px: #{unreachable.join(", ")}"
+    end
+  end
+
+  # The imports table carries a filename, which has no length limit of its own.
+  test "the imports table fits the window at any width" do
+    import = SpreadsheetImport.new(user: users(:admin), status: :completed,
+                                   total_rows: 5, processed_rows: 5, failed_rows: 2)
+    import.file.attach(io: file_fixture("users.csv").open,
+                       filename: "#{"a-long-spreadsheet-name" * 4}.csv", content_type: "text/csv")
+    import.save!(validate: false)
+    sign_in_as users(:admin)
+
+    [ 390, 700, 768, 1280 ].each do |width|
+      resize_window_to(width, 900)
+      visit admin_spreadsheet_imports_path
+
+      overflow = page.evaluate_script(<<~'JS')
+        (() => { const t = document.querySelector(".table-scroll"); return t.scrollWidth - t.clientWidth; })()
+      JS
+
+      assert_equal 0, overflow, "the imports table runs #{overflow}px past the card at #{width}px"
+    end
   end
 
   private

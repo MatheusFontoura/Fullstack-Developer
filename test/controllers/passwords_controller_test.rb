@@ -64,8 +64,8 @@ class PasswordsControllerTest < ActionDispatch::IntegrationTest
     assert_notice "Password has been reset"
   end
 
-  # has_secure_password ignores a blank assignment, so this saved cleanly, destroyed every
-  # session and announced a reset while the old password still worked.
+  # has_secure_password ignores a blank assignment, so nothing but this stops a reset
+  # that saves cleanly, destroys every session and leaves the old password working.
   test "refuses an empty password instead of reporting a reset that did not happen" do
     @user.sessions.create!
     digest = @user.password_digest

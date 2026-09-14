@@ -31,22 +31,22 @@
 <% end %>
 
 <div class="card table-scroll mt-6">
-  <table class="min-w-full divide-y divide-slate-200 text-left">
-    <thead class="bg-slate-50 text-xs font-semibold uppercase tracking-wide text-slate-500">
+  <table class="block min-w-full divide-y divide-slate-200 text-left md:table">
+    <thead class="hidden bg-slate-50 text-xs font-semibold uppercase tracking-wide text-slate-500 md:table-header-group">
       <tr>
-        <th scope="col" class="bg-slate-50 px-4 py-3 sm:sticky sm:left-0 sm:z-10">User</th>
+        <th scope="col" class="bg-slate-50 px-4 py-3 md:sticky md:left-0 md:z-10">User</th>
         <th scope="col" class="w-32 px-4 py-3">Role</th>
-        <th scope="col" class="hidden w-40 px-4 py-3 sm:table-cell">Joined</th>
+        <th scope="col" class="hidden w-40 px-4 py-3 md:table-cell">Joined</th>
         <th scope="col" class="px-4 py-3 text-right">Actions</th>
       </tr>
     </thead>
 
-    <tbody class="divide-y divide-slate-100">
+    <tbody class="block divide-y divide-slate-100 md:table-row-group">
       <% if @page.visible.any? %>
         <%= render partial: "admin/users/user", collection: @page.visible, as: :user %>
       <% else %>
-        <tr>
-          <td colspan="4" class="px-4 py-10 text-center text-sm text-slate-500">
+        <tr class="block md:table-row">
+          <td colspan="4" class="block px-4 py-10 text-center text-sm text-slate-500 md:table-cell">
             No users match that filter.
           </td>
         </tr>

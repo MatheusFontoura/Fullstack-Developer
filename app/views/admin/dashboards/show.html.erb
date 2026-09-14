@@ -1,6 +1,5 @@
 <% content_for :title, "Dashboard" %>
 
-<%# Morph, so a refresh updates the numbers without losing scroll position. %>
 <% turbo_refreshes_with method: :morph, scroll: :preserve %>
 <%= turbo_stream_from User::DASHBOARD_STREAM %>
 

@@ -53,18 +53,11 @@ Rails.application.configure do
   config.active_job.queue_adapter = :solid_queue
   config.solid_queue.connects_to = { database: { writing: :queue } }
 
-  # Ignore bad email addresses and do not raise email delivery errors.
-  # Set this to true and configure the email server for immediate delivery to raise delivery errors.
-  # config.action_mailer.raise_delivery_errors = false
-
-  # Set host to be used by links generated in mailer templates.
-  # Same host Kamal terminates TLS on. A password reset link is the only way an imported
-  # user ever signs in, so a placeholder here is a broken feature, not a stub.
+  # A password reset link is the only way an imported user ever signs in, so neither the
+  # host nor the delivery settings below can be left on a placeholder and still call the
+  # feature delivered. Host is the one Kamal terminates TLS on; address and port come
+  # from the environment, credentials from the encrypted file.
   config.action_mailer.default_url_options = { host: ENV.fetch("APP_HOST", "example.com"), protocol: "https" }
-
-  # A password reset is the only way an imported user ever signs in, so delivery has to
-  # be configured rather than left to a placeholder. Address and port come from the
-  # environment; the credentials come from the encrypted file.
   config.action_mailer.delivery_method = :smtp
   config.action_mailer.raise_delivery_errors = true
   config.action_mailer.smtp_settings = {

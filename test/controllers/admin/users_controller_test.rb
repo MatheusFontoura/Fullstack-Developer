@@ -139,8 +139,7 @@ class Admin::UsersControllerTest < ActionDispatch::IntegrationTest
     assert_no_match "evil.example", response.body
   end
 
-  # url_for only runs when there are pagination links to build, so without the rows this
-  # asserted nothing.
+  # url_for only runs when there are pagination links to build, hence the rows.
   test "does not let a query parameter reach the router" do
     30.times { |i| User.create!(full_name: "Person #{i}", email: "r#{i}@umanni.test", password: "secret-password") }
 
@@ -163,9 +162,8 @@ class Admin::UsersControllerTest < ActionDispatch::IntegrationTest
     assert_equal "Grace B. Hopper", users(:admin).reload.full_name
   end
 
-  # A client that follows a 302 keeps the method. Refusing a DELETE with one sent the
-  # same DELETE to the redirect target, and /profile answers DELETE by deleting the
-  # account of whoever asked.
+  # A client that follows a 302 keeps the method, and /profile answers DELETE by deleting
+  # the account of whoever asked.
   test "a refusal does not hand a destructive method to the redirect target" do
     sign_out
     sign_in_as users(:member)

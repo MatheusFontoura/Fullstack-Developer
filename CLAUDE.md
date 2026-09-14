@@ -58,10 +58,12 @@
   Demo logins, password `secret-password`: `admin@umanni.test` (admin), `user@umanni.test` (user).
 - Fixtures use `grace@umanni.test` (admin) and `ada@umanni.test` (user), same password.
 - Development mail goes to SMTP on port 1025, host `SMTP_HOST` (default `localhost`, `mail` under Docker).
+  Production reads a different variable, `SMTP_ADDRESS`, and raises on delivery errors instead of swallowing them.
   `docker compose --profile mail up` starts Mailpit on :8025. With nothing listening there delivery fails
-  silently (`raise_delivery_errors = false`). Preview at `/rails/mailers`.
+  silently in development (`raise_delivery_errors = false`). Preview at `/rails/mailers`.
 - `Dockerfile` is the production image: multi-stage, non-root, Thruster. `config/deploy.yml` is a complete Kamal 2
-  configuration with three placeholders (registry, image owner, server/host).
+  configuration whose placeholders are the image owner, server IP, registry user and the
+  `APP_HOST`/`SMTP_ADDRESS`/`MAIL_FROM` under `env: clear:`. Its two secrets come from `.kamal/secrets`.
 
 ## Testing
 
@@ -97,8 +99,11 @@
   `style-src-attr 'unsafe-inline'` for computed widths. Adding an external script or stylesheet means updating
   `config/initializers/content_security_policy.rb`. `ApplicationSystemTestCase` fails any test whose page reports a
   violation — a blocked style breaks the interface without failing a single DOM assertion.
-- `ENV["PORT"]` is not the port the app serves on. Foreman gives each Procfile process its own (web 3200, css 3300,
-  jobs 3400), and mail is delivered from the jobs process, so links built from PORT point at the worker. Use `WEB_PORT`.
+- `ENV["PORT"]` is not the port the app serves on. Foreman gives each Procfile process its own (web 3000, css 3100,
+  jobs 3200), and mail is delivered from the jobs process, so links built from PORT point at the worker. Use `WEB_PORT`.
+- The admin tables stack into cards below `sm`: the table, head, body, rows and cells all carry `block`/`hidden` with
+  an `sm:table-*` counterpart. A four-column row with three actions does not fit 390px, and internal horizontal scroll
+  hides the actions behind an edge nobody notices. Keep `dom_id(user)` on the `tr` — the role toggle replaces it.
 - Never pass `request.query_parameters` to `url_for`. It hands the router `host`, `protocol` and `controller` from the
   query string: pagination links get rewritten to another domain, and a bad `controller` is a 500.
 

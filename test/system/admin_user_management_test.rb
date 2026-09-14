@@ -89,8 +89,8 @@ class AdminUserManagementTest < ApplicationSystemTestCase
     within("table") { assert_no_text "Ada Lovelace" }
   end
 
-  # The background shorthand on .table-scroll resets background-color, which stripped the
-  # white off the .card underneath it. Nothing in the DOM changes when that happens.
+  # The background shorthand on .table-scroll resets background-color and takes the white
+  # off the .card underneath. Nothing in the DOM changes when that happens.
   test "the users table keeps the surface of the card it sits on" do
     surface = evaluate_script("getComputedStyle(document.querySelector('.table-scroll')).backgroundColor")
 

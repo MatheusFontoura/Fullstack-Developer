@@ -17,7 +17,6 @@ class LiveDashboardTest < ApplicationSystemTestCase
       )
     end
 
-    # No reload, no click: the page is morphed by a broadcast on the dashboard stream.
     assert_selector "#metric-total", text: before + 1
   end
 
