@@ -112,7 +112,8 @@ Plain `bin/setup` hands the terminal straight to `bin/dev`. `bin/dev` installs t
 
 ### Demo logins
 
-Seeds are idempotent and create 32 users. Password for all of them: `secret-password`.
+Seeds are idempotent and create 32 users — 6 admins and 26 users, the same split on every
+machine. Password for all of them: `secret-password`.
 
 | Email | Role |
 |---|---|
@@ -145,7 +146,7 @@ bin/rails test          # skips system tests
 bin/ci                  # the whole pipeline: lint, audits, Brakeman, tests, seeds
 ```
 
-**180 tests, 646 assertions, 99.76% line coverage, 97.54% branch coverage** on the last
+**181 tests, 652 assertions, 99.76% line coverage, 97.54% branch coverage** on the last
 run — `bin/rails test:all` prints the current figures, and a per-layer breakdown kept by
 hand only rots. Tests run in parallel across one process per core, and SimpleCov results
 are merged per worker — without that merge the report shows roughly one worker's share

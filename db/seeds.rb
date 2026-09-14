@@ -8,6 +8,10 @@ end
 DEMO_USER_COUNT = 32
 PASSWORD = "secret-password".freeze
 
+# Fixed so that two people who seed get the same dashboard. Without it the role split is
+# a different number every run, and the first thing this application shows is a count.
+Faker::Config.random = Random.new(20_260_903)
+
 [
   { full_name: "Grace Hopper", email: "admin@umanni.test", role: :admin },
   { full_name: "Ada Lovelace", email: "user@umanni.test", role: :user }

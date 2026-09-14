@@ -79,6 +79,27 @@ class ResponsiveTest < ApplicationSystemTestCase
     end
   end
 
+  # The imports table carries a filename, which has no length limit of its own.
+  test "the imports table fits the window at any width" do
+    import = SpreadsheetImport.new(user: users(:admin), status: :completed,
+                                   total_rows: 5, processed_rows: 5, failed_rows: 2)
+    import.file.attach(io: file_fixture("users.csv").open,
+                       filename: "#{"a-long-spreadsheet-name" * 4}.csv", content_type: "text/csv")
+    import.save!(validate: false)
+    sign_in_as users(:admin)
+
+    [ 390, 700, 768, 1280 ].each do |width|
+      resize_window_to(width, 900)
+      visit admin_spreadsheet_imports_path
+
+      overflow = page.evaluate_script(<<~'JS')
+        (() => { const t = document.querySelector(".table-scroll"); return t.scrollWidth - t.clientWidth; })()
+      JS
+
+      assert_equal 0, overflow, "the imports table runs #{overflow}px past the card at #{width}px"
+    end
+  end
+
   private
     def resize_to_phone
       resize_window_to(*PHONE)
