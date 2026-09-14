@@ -97,7 +97,7 @@ class SpreadsheetImportJob < ApplicationJob
       return if @row_errors.size >= MAX_ROW_ERRORS
 
       @row_errors << { "line" => line, "message" => message }
-      # Written now, not with the next batch: an interruption would lose the reason.
+      # An interruption before the next batch would take the reason with it.
       persist
     end
 

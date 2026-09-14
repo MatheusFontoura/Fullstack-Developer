@@ -17,8 +17,8 @@ class User < ApplicationRecord
 
   enum :role, { user: "user", admin: "admin" }, default: :user, validate: true
 
-  # A lambda, not the bare symbol: the macro calls `send` on the record for anything
-  # that does not respond to `call`, so `:dashboard` would look for User#dashboard.
+  # The macro calls `send` on the record for anything that does not respond to `call`,
+  # so a bare `:dashboard` would go looking for User#dashboard.
   broadcasts_refreshes_to ->(_user) { DASHBOARD_STREAM }
 
   normalizes :email, with: ->(email) { email.strip.downcase }
@@ -69,7 +69,7 @@ class User < ApplicationRecord
     end
 
     def last_admin_is_not_deletable
-      # role_in_database, not role: an unsaved change must not decide this.
+      # An unsaved change to the role must not decide whether the record can go.
       return unless role_in_database == "admin"
       return if another_admin_exists?
 

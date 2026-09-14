@@ -16,8 +16,8 @@ Rails.application.configure do
     policy.style_src_attr :unsafe_inline
   end
 
-  # Random per response, not derived from the session id: a visitor with no session yet
-  # gets an empty nonce, which matches nothing and blocks the import map.
+  # Deriving this from the session id gives a visitor who has no session yet an empty
+  # nonce, which matches nothing and blocks the import map.
   config.content_security_policy_nonce_generator = ->(_request) { SecureRandom.base64(16) }
   # style-src too: Turbo stamps its navigation bar's <style> with the page nonce.
   config.content_security_policy_nonce_directives = %w[ script-src style-src ]
