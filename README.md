@@ -153,10 +153,9 @@ bin/ci                  # the whole pipeline: lint, audits, Brakeman, tests, see
 
 **180 tests, 640 assertions, 99.76% line coverage, 97.54% branch coverage** on the last
 run — `bin/rails test:all` prints the current figures, and a per-layer breakdown kept by
-hand only rots. Tests run
-in parallel across one process per core, and SimpleCov results are merged per worker —
-without that merge the report shows roughly one worker's share and every number after it
-is fiction. The 90% floor is enforced under `CI` or `COVERAGE`.
+hand only rots. Tests run in parallel across one process per core, and SimpleCov results
+are merged per worker — without that merge the report shows roughly one worker's share
+and every number after it is fiction. The 90% floor is enforced under `CI` or `COVERAGE`.
 
 System tests need Chrome, and `Dockerfile.dev` does not install one: run the suite on the
 host, not through `docker compose exec`. If Chrome is not on `PATH` (WSL, slim
@@ -166,9 +165,10 @@ containers):
 CHROME_BINARY=/path/to/chrome bin/rails test:system
 ```
 
-The system tests prove what no controller test can: that the dashboard counters move on their own when a user is created elsewhere,
-that a role toggle replaces one table row without reloading the page, and that an
-import's progress arrives over the wire while the page sits open.
+The system tests prove what no controller test can: that the dashboard counters move on
+their own when a user is created elsewhere, that a role toggle replaces one table row
+without reloading the page, and that an import's progress arrives over the wire while
+the page sits open.
 
 ---
 
@@ -291,12 +291,12 @@ asked. Reproduced with `fetch(..., { method: "DELETE", redirect: "follow" })` ag
 the running application, and the account was gone. A test asserts the status.
 
 **Mass assignment.** `params.expect` in every controller that accepts a form, rather than
-`params.permit` — a request
-that is not shaped like the form is a 400 rather than something quietly filtered to an
-empty hash. (The admin index reads its filters with `params.permit`; it takes query
-string, not a form, and a malformed one should narrow the list, not 400.) `:role` appears in exactly one permitted list, in the admin namespace. Both
-self-registration and profile editing have a test that submits `role: admin` and asserts
-the user stays a user.
+`params.permit` — a request that is not shaped like the form is a 400 rather than
+something quietly filtered to an empty hash. (The admin index reads its filters with
+`params.permit`; it takes query string, not a form, and a malformed one should narrow the
+list, not 400.) `:role` appears in exactly one permitted list, in the admin namespace.
+Both self-registration and profile editing have a test that submits `role: admin` and
+asserts the user stays a user.
 
 **Brute force.** The sign-in and password-reset endpoints keep the generated
 `rate_limit`. The test environment gives the limiter a real cache store so the rule is
@@ -391,11 +391,11 @@ it is what this image did until the keys were added.
 `config/deploy.yml` is a complete Kamal 2 configuration: fill in the image owner, server
 IP, registry user and the `APP_HOST`/`SMTP_ADDRESS`/`MAIL_FROM` under `env: clear:`, and
 `bin/kamal setup` is the deploy. The two secrets it needs — `KAMAL_REGISTRY_PASSWORD` and
-`RAILS_MASTER_KEY` — come from `.kamal/secrets`, which reads both from your environment. `kamal config` resolves the
-whole file — roles, image, volume, ssh, builder — and `kamal secrets print` resolves the
-master key. **A deploy against a real host was not exercised**; there was no server to
-deploy to. TLS terminates at
-kamal-proxy, so `assume_ssl` and `force_ssl` are on in production.
+`RAILS_MASTER_KEY` — come from `.kamal/secrets`, which reads both from your environment.
+`kamal config` resolves the whole file — roles, image, volume, ssh, builder — and
+`kamal secrets print` resolves the master key. **A deploy against a real host was not
+exercised**; there was no server to deploy to. TLS terminates at kamal-proxy, so
+`assume_ssl` and `force_ssl` are on in production.
 
 Solid Queue runs inside Puma rather than as a separate job role, and that follows from
 SQLite rather than being a shortcut: a worker on a second machine could not reach a
