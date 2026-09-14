@@ -1,11 +1,11 @@
 # Renders a partial under YJIT and ZJIT. Rails turns YJIT on by default, so there is no
-# plain-interpreter column without disabling it. Needs a database, and a master key the
-# image can read — regenerate credentials first if you do not have one:
+# plain-interpreter column without disabling it.
 #
-#   docker run --rm -e RUBYOPT=--yjit umanni \
-#     sh -c "bin/rails db:prepare && bin/rails runner script/jit_benchmark.rb"
-#   docker run --rm -e RUBYOPT=--zjit umanni \
-#     sh -c "bin/rails db:prepare && bin/rails runner script/jit_benchmark.rb"
+#   docker compose exec -e RUBYOPT=--yjit web bin/rails runner script/jit_benchmark.rb
+#   docker compose exec -e RUBYOPT=--zjit web bin/rails runner script/jit_benchmark.rb
+#
+# Against the production image instead, prefix with `db:prepare` and pass a master key
+# that image can read.
 #
 # No benchmark gem: it stopped being a default gem in Ruby 4, and a monotonic clock
 # is all this needs.

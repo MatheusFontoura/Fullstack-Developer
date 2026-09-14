@@ -429,16 +429,25 @@ Ruby 4 ships ZJIT and the official image has it compiled in, so enabling it is o
 Measuring first says not to. Rendering the users table partial 20,000 times inside the
 production image, after 5,000 warmup iterations:
 
-| | Per render |
-|---|---|
-| YJIT (Rails' default) | 0.204–0.226 ms |
-| ZJIT | 0.340–0.375 ms |
+| | YJIT (Rails' default) | ZJIT |
+|---|---|---|
+| Production image | 0.204–0.226 ms | 0.340–0.375 ms |
+| Development container | 0.365–0.395 ms | 0.571–0.592 ms |
 
-ZJIT stayed roughly 70% slower across runs, and a shorter warmup widened the gap instead
-of narrowing it, so this is not a young JIT handicapped by warmup. Rails enables YJIT on
-its own; it stays that way.
+ZJIT came out between 50% and 80% slower in every run of both, and a shorter warmup
+widened the gap instead of narrowing it, so this is not a young JIT handicapped by
+warmup. Rails enables YJIT on its own; it stays that way.
 
-Reproduce it with `script/jit_benchmark.rb`; the numbers above are from one machine.
+`script/jit_benchmark.rb` takes the measurement. The development container needs no
+credentials, so this is the one to reproduce:
+
+```bash
+docker compose exec -e RUBYOPT=--yjit web bin/rails runner script/jit_benchmark.rb
+docker compose exec -e RUBYOPT=--zjit web bin/rails runner script/jit_benchmark.rb
+```
+
+Absolute numbers are per machine and the two rows are not comparable to each other — the
+development image boots unoptimised. The ratio within a row is the measurement.
 
 ---
 
