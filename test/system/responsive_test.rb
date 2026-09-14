@@ -50,9 +50,9 @@ class ResponsiveTest < ApplicationSystemTestCase
     assert clipped, "the name was not truncated, so the cell grew to fit it"
   end
 
-  # The table used to run 654px wide inside a 356px viewport, which put the whole actions
-  # column past the right edge behind a scrollbar nobody notices. Reaching an action has
-  # to mean seeing it, so this asserts the box is on screen and nothing sits over it.
+  # Reaching an action has to mean seeing it. A row wide enough to push the buttons past
+  # the right edge leaves them behind a scrollbar nobody notices, and every other
+  # assertion here still passes.
   test "every action in the users table can be tapped on a phone" do
     sign_in_as users(:admin)
     resize_to_phone
