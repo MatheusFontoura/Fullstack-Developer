@@ -31,8 +31,8 @@
 <% end %>
 
 <div class="card table-scroll mt-6">
-  <table class="min-w-full divide-y divide-slate-200 text-left">
-    <thead class="bg-slate-50 text-xs font-semibold uppercase tracking-wide text-slate-500">
+  <table class="block min-w-full divide-y divide-slate-200 text-left sm:table">
+    <thead class="hidden bg-slate-50 text-xs font-semibold uppercase tracking-wide text-slate-500 sm:table-header-group">
       <tr>
         <th scope="col" class="bg-slate-50 px-4 py-3 sm:sticky sm:left-0 sm:z-10">User</th>
         <th scope="col" class="w-32 px-4 py-3">Role</th>
@@ -41,12 +41,12 @@
       </tr>
     </thead>
 
-    <tbody class="divide-y divide-slate-100">
+    <tbody class="block divide-y divide-slate-100 sm:table-row-group">
       <% if @page.visible.any? %>
         <%= render partial: "admin/users/user", collection: @page.visible, as: :user %>
       <% else %>
-        <tr>
-          <td colspan="4" class="px-4 py-10 text-center text-sm text-slate-500">
+        <tr class="block sm:table-row">
+          <td colspan="4" class="block px-4 py-10 text-center text-sm text-slate-500 sm:table-cell">
             No users match that filter.
           </td>
         </tr>

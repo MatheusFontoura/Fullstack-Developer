@@ -33,9 +33,10 @@
       <%= form.file_field :avatar_image, accept: User::AVATAR_CONTENT_TYPES.join(","),
             data: { image_preview_target: "input", action: "image-preview#show" },
             class: "field-input file:mr-3 file:rounded-md file:border-0 file:bg-slate-100
-                    file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-slate-700" %>
+                    file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-slate-700",
+            **field_error_attributes(user, :avatar_image) %>
     </div>
-      <%= field_error user, :avatar_image %>
+    <%= field_error user, :avatar_image %>
     <p class="field-hint">PNG, JPEG or WebP, up to 2 MB.</p>
     <% if user.avatar_image.attachment&.persisted? %>
       <label class="mt-2 flex items-center gap-2 text-sm text-slate-600">

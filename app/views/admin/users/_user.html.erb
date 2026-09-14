@@ -1,5 +1,5 @@
-<tr id="<%= dom_id(user) %>" class="group hover:bg-slate-50">
-  <td class="bg-white px-4 py-3 group-hover:bg-slate-50 sm:sticky sm:left-0 sm:z-10">
+<tr id="<%= dom_id(user) %>" class="group flex flex-wrap items-center gap-y-2 py-2 hover:bg-slate-50 sm:table-row sm:gap-0 sm:py-0">
+  <td class="w-full bg-white px-4 pt-2 group-hover:bg-slate-50 sm:w-auto sm:table-cell sm:py-3 sm:sticky sm:left-0 sm:z-10">
     <div class="flex items-center gap-3">
       <%= render "shared/avatar", user: user %>
       <div class="min-w-0 max-w-64">
@@ -9,7 +9,7 @@
     </div>
   </td>
 
-  <td class="px-4 py-3 whitespace-nowrap">
+  <td class="px-4 pb-2 whitespace-nowrap sm:table-cell sm:py-3 sm:pb-3">
     <span class="<%= user.admin? ? "badge-admin" : "badge-user" %>"><%= user.role.capitalize %></span>
   </td>
 
@@ -17,8 +17,8 @@
     <%= user.created_at.to_date.to_fs(:long) %>
   </td>
 
-  <td class="px-4 py-3">
-    <div class="flex items-center justify-end gap-2">
+  <td class="ml-auto px-4 pb-2 sm:ml-0 sm:table-cell sm:py-3 sm:pb-3">
+    <div class="flex flex-wrap items-center justify-end gap-2">
       <% if user == Current.user %>
         <span class="text-xs text-slate-400">You</span>
       <% else %>

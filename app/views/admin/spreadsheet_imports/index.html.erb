@@ -10,8 +10,8 @@
 </div>
 
 <div class="card table-scroll mt-6">
-  <table class="min-w-full divide-y divide-slate-200 text-left">
-    <thead class="bg-slate-50 text-xs font-semibold uppercase tracking-wide text-slate-500">
+  <table class="block min-w-full divide-y divide-slate-200 text-left sm:table">
+    <thead class="hidden bg-slate-50 text-xs font-semibold uppercase tracking-wide text-slate-500 sm:table-header-group">
       <tr>
         <th scope="col" class="px-4 py-3">File</th>
         <th scope="col" class="px-4 py-3">Status</th>
@@ -21,21 +21,21 @@
       </tr>
     </thead>
 
-    <tbody class="divide-y divide-slate-100">
+    <tbody class="block divide-y divide-slate-100 sm:table-row-group">
       <% if @spreadsheet_imports.any? %>
         <% @spreadsheet_imports.each do |spreadsheet_import| %>
-          <tr class="hover:bg-slate-50">
-            <td class="px-4 py-3 whitespace-nowrap">
+          <tr class="flex flex-wrap items-center gap-y-2 py-2 hover:bg-slate-50 sm:table-row sm:gap-0 sm:py-0">
+            <td class="w-full px-4 pt-2 whitespace-nowrap sm:w-auto sm:table-cell sm:py-3 sm:pt-3">
               <%= link_to spreadsheet_import.file.filename,
                     admin_spreadsheet_import_path(spreadsheet_import),
                     class: "font-medium text-brand-600 hover:text-brand-700" %>
             </td>
-            <td class="px-4 py-3">
+            <td class="px-4 pb-2 sm:table-cell sm:py-3 sm:pb-3">
               <span class="<%= import_status_badge(spreadsheet_import) %>">
                 <%= spreadsheet_import.status.capitalize %>
               </span>
             </td>
-            <td class="px-4 py-3 text-sm whitespace-nowrap tabular-nums text-slate-600">
+            <td class="ml-auto px-4 pb-2 text-sm whitespace-nowrap tabular-nums text-slate-600 sm:ml-0 sm:table-cell sm:py-3 sm:pb-3">
               <%= spreadsheet_import.imported_rows %> imported<%= ", #{spreadsheet_import.failed_rows} rejected" if spreadsheet_import.failed_rows.positive? %>
             </td>
             <td class="hidden px-4 py-3 text-sm text-slate-500 md:table-cell">
@@ -47,8 +47,8 @@
           </tr>
         <% end %>
       <% else %>
-        <tr>
-          <td colspan="5" class="px-4 py-10 text-center text-sm text-slate-500">
+        <tr class="block sm:table-row">
+          <td colspan="5" class="block px-4 py-10 text-center text-sm text-slate-500 sm:table-cell">
             No imports yet.
           </td>
         </tr>
