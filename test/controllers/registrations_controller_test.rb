@@ -17,6 +17,19 @@ class RegistrationsControllerTest < ActionDispatch::IntegrationTest
     assert_predicate cookies[:session_id], :present?
   end
 
+  test "lands a new account on its own profile, not on the admin page it was bounced off" do
+    get admin_dashboard_path
+
+    assert_redirected_to new_session_path
+
+    post registration_path, params: { user: valid_attributes }
+
+    assert_redirected_to profile_path
+    follow_redirect!
+
+    assert_select "#flash", text: /Welcome to Umanni/
+  end
+
   test "ignores a role supplied by the visitor" do
     post registration_path, params: { user: valid_attributes.merge(role: "admin") }
 

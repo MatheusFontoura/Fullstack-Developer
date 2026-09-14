@@ -13,7 +13,10 @@ class RegistrationsController < ApplicationController
 
     if @user.save
       start_new_session_for @user
-      redirect_to after_authentication_url, notice: "Welcome to Umanni."
+      # Not after_authentication_url: a visitor who was bounced off /admin has that URL
+      # stored, and honouring it here answers a new account with "not authorised".
+      session.delete(:return_to_after_authenticating)
+      redirect_to home_url_for(@user), notice: "Welcome to Umanni."
     else
       render :new, status: :unprocessable_content
     end
